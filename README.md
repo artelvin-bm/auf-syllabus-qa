@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8, the final planned version of the MobileBERT Syllabus Q&A project.
+This is Version 8.1 of the final MobileBERT Syllabus Q&A project, with AUF-branded UI polish.
 
 ## What this version does
 
@@ -254,3 +254,14 @@ PDF / DOCX / pasted text
 → MobileBERT extractive Q&A
 → answer-quality filtering
 → evaluation against real syllabus questions
+
+
+## Version 8.1 UI polish
+
+- Added Angeles University Foundation branding.
+- Added AUF logo and campus background assets.
+- Reworked the top area into a responsive hero banner.
+- Improved card spacing, typography, controls, answer presentation, and evaluation results.
+- Added AUF-inspired blue/gold visual accents.
+- Added mobile-responsive behavior.
+- Added a clean footer identifying the main browser-side technologies.

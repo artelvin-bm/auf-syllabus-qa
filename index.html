@@ -17,23 +17,43 @@
 </head>
 <body>
   <main class="app-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">PTF50 · Pre-Trained Model Project</p>
-        <h1>Syllabus Q&A</h1>
-        <p class="subtitle">
-          Paste or upload a syllabus, reconstruct key relationships from its structure,
-          then ask questions using MobileBERT.
-        </p>
+    <section class="hero-banner">
+      <div class="hero-overlay"></div>
+
+      <div class="hero-content">
+        <div class="brand-row">
+          <img src="assets/auf-logo.png" alt="Angeles University Foundation logo" class="brand-logo" />
+          <div>
+            <p class="brand-kicker">Angeles University Foundation</p>
+            <p class="brand-sub">College of Computer Studies</p>
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <p class="eyebrow">PTF50 · Pre-Trained Model Project</p>
+          <h1>Syllabus Q&A</h1>
+          <p class="subtitle">
+            Ask natural-language questions about a course syllabus using
+            MobileBERT extractive question answering with syllabus-aware preprocessing.
+          </p>
+
+          <div class="hero-actions">
+            <span class="hero-chip">PDF</span>
+            <span class="hero-chip">DOCX</span>
+            <span class="hero-chip">Paste Text</span>
+            <span class="hero-chip">MobileBERT</span>
+          </div>
+        </div>
+
+        <div id="modelBadge" class="status-badge loading">Model not loaded</div>
       </div>
-      <div id="modelBadge" class="status-badge loading">Model not loaded</div>
-    </header>
+    </section>
 
     <section class="card">
       <div class="section-heading">
         <div>
           <span class="step-number">1</span>
-          <h2>Add a syllabus</h2>
+          <h2>Upload or paste a syllabus</h2>
         </div>
         <button id="loadSampleBtn" class="button secondary" type="button">
           Load PTF50 sample
@@ -44,7 +64,7 @@
         <input id="fileInput" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         <div>
           <strong>Upload PDF or DOCX</strong>
-          <p>Text is extracted in your browser. PDF extraction preserves line positions where possible.</p>
+          <p>PDF and DOCX files are processed directly in the browser. You can also paste syllabus text manually.</p>
         </div>
       </div>
 
@@ -73,7 +93,7 @@
       <div class="section-heading">
         <div>
           <span class="step-number">2</span>
-          <h2>Ask a question</h2>
+          <h2>Ask about the syllabus</h2>
         </div>
       </div>
 
@@ -81,7 +101,7 @@
         <input
           id="questionInput"
           type="text"
-          placeholder="Example: Who is the instructor?"
+          placeholder="Try: Who is the instructor? What is CLO 2? What topic is taught in the 7th to 8th week?"
           autocomplete="off"
         />
         <button id="askBtn" class="button primary" type="button" disabled>
@@ -160,6 +180,13 @@
         <pre id="processedContext">Process a syllabus to view the normalized context.</pre>
       </details>
     </section>
+      <footer class="site-footer">
+      <div>
+        <strong>Syllabus Q&A</strong>
+        <span>MobileBERT · TensorFlow.js · PDF.js · Mammoth.js</span>
+      </div>
+      <span>Angeles University Foundation · College of Computer Studies</span>
+    </footer>
   </main>
 
   <script src="js/extractor.js"></script>
