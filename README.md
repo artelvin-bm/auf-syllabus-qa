@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.2 of the final MobileBERT Syllabus Q&A project, with a right-aligned hero layout.
+This is Version 8.3 of the final MobileBERT Syllabus Q&A project, with separate AUF header branding.
 
 ## What this version does
 
@@ -274,3 +274,12 @@ PDF / DOCX / pasted text
 - Kept the MobileBERT status badge on the left/bottom.
 - Adjusted the dark overlay for readability.
 - Preserved a stacked layout on tablets and phones.
+
+
+## Version 8.3 UI adjustment
+
+- Moved AUF logo and institutional name outside the campus hero banner.
+- Added a clean top header for AUF branding.
+- Moved MobileBERT loading/ready status into the top header.
+- Left the hero focused on the Syllabus Q&A project title and description.
+- Preserved the right-aligned hero copy and mobile responsiveness.

@@ -52,6 +52,56 @@ button {
   padding: 28px 0 52px;
 }
 
+/* TOP HEADER */
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+  padding: 6px 4px;
+}
+
+.top-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.top-brand-logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
+.top-brand-text {
+  min-width: 0;
+}
+
+.top-brand-name {
+  margin: 0;
+  color: var(--auf-blue);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.top-brand-college {
+  margin: 3px 0 0;
+  color: #66768a;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.top-header .status-badge {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: .8rem;
+  font-weight: 900;
+}
+
 /* HERO */
 .hero-banner {
   position: relative;
@@ -77,51 +127,17 @@ button {
 .hero-content {
   position: relative;
   z-index: 1;
-  display: grid;
+  display: flex;
   min-height: 360px;
-  grid-template-columns: minmax(260px, .75fr) minmax(480px, 1.25fr);
-  grid-template-rows: auto 1fr auto;
-  column-gap: 48px;
-  padding: 30px 34px 34px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 30px 42px;
   color: #fff;
 }
 
-.brand-row {
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  align-self: start;
-}
-
-.brand-logo {
-  width: 62px;
-  height: 62px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
-}
-
-.brand-kicker {
-  margin: 0;
-  font-size: 1.02rem;
-  font-weight: 900;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.brand-sub {
-  margin: 3px 0 0;
-  color: rgba(255,255,255,.82);
-  font-size: .9rem;
-}
-
 .hero-copy {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  max-width: 700px;
-  justify-self: end;
-  align-self: center;
+  width: min(680px, 62%);
+  margin-left: auto;
   text-align: left;
 }
 
@@ -192,18 +208,21 @@ h2 {
 }
 
 .status-badge.loading {
-  background: rgba(242,201,76,.16);
-  color: #fff2b8;
+  background: #fff4cf;
+  color: #7b5a00;
+  border-color: #f1df9c;
 }
 
 .status-badge.ready {
-  background: rgba(38,165,98,.18);
-  color: #d9ffe8;
+  background: #def5e7;
+  color: #17633a;
+  border-color: #bfe6cd;
 }
 
 .status-badge.error {
-  background: rgba(201,37,45,.24);
-  color: #ffe4e5;
+  background: #ffe5e7;
+  color: #98262d;
+  border-color: #f4c4c8;
 }
 
 /* CARDS */
@@ -595,25 +614,24 @@ pre {
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
+  .top-header {
+    align-items: flex-start;
+  }
+
   .hero-banner,
   .hero-content {
-    min-height: 430px;
+    min-height: 390px;
   }
 
   .hero-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding: 28px;
   }
 
   .hero-copy {
-    max-width: 760px;
-    align-self: stretch;
-    text-align: left;
-  }
-
-  .status-badge {
-    align-self: flex-start;
+    width: min(760px, 100%);
+    margin-left: 0;
   }
 
   .upload-box {
@@ -626,6 +644,30 @@ pre {
 }
 
 @media (max-width: 720px) {
+
+  .top-header {
+    gap: 12px;
+    padding: 8px 2px 4px;
+  }
+
+  .top-brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .top-brand-name {
+    font-size: .83rem;
+  }
+
+  .top-brand-college {
+    font-size: .76rem;
+  }
+
+  .top-header .status-badge {
+    font-size: .72rem;
+    padding: 8px 10px;
+  }
+
   .app-shell {
     width: min(100% - 18px, 1180px);
     padding-top: 10px;
