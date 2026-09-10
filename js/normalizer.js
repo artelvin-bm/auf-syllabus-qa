@@ -417,6 +417,7 @@ function normalizeSyllabus(text) {
   normalized = normalizeCourseFields(normalized);
   normalized = normalizeNameRolePairs(normalized);
   normalized = normalizeSignatories(normalized);
+  normalized = normalizeLearningOutcomesAndLists(normalized);
   normalized = normalizeGradingSystem(normalized);
   normalized = normalizeTopicRecords(normalized);
   return normalized;

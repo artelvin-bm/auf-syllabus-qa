@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 6 of the MobileBERT Syllabus Q&A project.
+This is Version 7 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -173,3 +173,32 @@ The subtopics under Natural Language Processing with Transformers.js are Pipelin
 - Strong-answer adjusted score: 5.0
 
 These values are intentionally configurable in `js/qna.js`.
+
+
+## Version 7 additions
+
+- Added `listParser.js`.
+- Detects and normalizes:
+  - Major Course Outcomes (MCOs)
+  - Course Learning Outcomes (CLOs)
+  - Program Learning Outcomes (PLOs)
+  - Institutional Learning Outcomes
+  - Core Values
+- Rejoins wrapped multi-line list items.
+- Makes each outcome individually answerable.
+- Adds retrieval routing for MCO / terminal-requirement questions.
+- Displays detected CLO and MCO counts after processing.
+
+## Example
+
+Original:
+
+1. Explain the modern web AI landscape, including the architectures,
+capabilities, trade-offs, and ethical considerations of client-side and
+server-side AI deployment.
+
+Normalized:
+
+CLO1: Explain the modern web AI landscape, including the architectures, capabilities, trade-offs, and ethical considerations of client-side and server-side AI deployment.
+CLO1 is a Course Learning Outcome.
+The course learning outcome CLO1 states: Explain the modern web AI landscape, including the architectures, capabilities, trade-offs, and ethical considerations of client-side and server-side AI deployment.

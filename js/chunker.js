@@ -161,13 +161,18 @@ function scoreChunk(question, chunk) {
       boost: 12,
     },
     {
+      test: /(major course outcome|mco|terminal requirement)/,
+      keywords: ["description of the terminal requirement", "normalized terminal requirements"],
+      boost: 12,
+    },
+    {
       test: /(course learning outcome|clo)/,
-      keywords: ["course learning outcomes"],
+      keywords: ["course learning outcomes", "normalized course learning outcomes"],
       boost: 10,
     },
     {
       test: /(program learning outcome|plo)/,
-      keywords: ["program learning outcomes"],
+      keywords: ["program learning outcomes", "normalized program learning outcomes"],
       boost: 10,
     },
     {

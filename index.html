@@ -123,7 +123,7 @@
       <details>
         <summary>Processed context</summary>
         <p class="debug-help">
-          This is the context sent to MobileBERT. Version 5 adds stronger topic-table reconstruction, including rows broken across multiple extracted PDF lines.
+          This is the context sent to MobileBERT. Version 7 also normalizes CLOs, MCOs, PLOs, institutional outcomes, and structured syllabus lists.
         </p>
         <pre id="processedContext">Process a syllabus to view the normalized context.</pre>
       </details>
@@ -131,6 +131,7 @@
   </main>
 
   <script src="js/extractor.js"></script>
+  <script src="js/listParser.js"></script>
   <script src="js/topicParser.js"></script>
   <script src="js/normalizer.js"></script>
   <script src="js/chunker.js"></script>

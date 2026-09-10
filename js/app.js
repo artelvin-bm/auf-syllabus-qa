@@ -82,6 +82,8 @@ function processSyllabus() {
   const detectedTopicRecords = typeof reconstructTopicRecords === "function"
     ? reconstructTopicRecords(raw)
     : [];
+  const detectedCLOs = typeof parseCLOs === "function" ? parseCLOs(raw) : [];
+  const detectedMCOs = typeof parseMCOs === "function" ? parseMCOs(raw) : [];
   currentContext = normalizeSyllabus(raw);
   currentChunks = chunkBySections(currentContext);
   processedContext.textContent = currentContext;
@@ -93,7 +95,7 @@ function processSyllabus() {
 
   setMessage(
     processMessage,
-    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context · ${currentChunks.length} semantic chunks · ${detectedTopicRecords.length} topic records detected.`,
+    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context · ${currentChunks.length} semantic chunks · ${detectedTopicRecords.length} topic records · ${detectedCLOs.length} CLOs · ${detectedMCOs.length} MCOs detected.`,
     "success"
   );
 
