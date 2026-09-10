@@ -247,22 +247,48 @@ function parseTopicBlocks(text) {
   );
 }
 
+function parseTopicCell(cell) {
+  const cleaned = String(cell || "").replace(/\s+/g, " ").trim();
+
+  const withoutRoman = cleaned.replace(
+    /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\.\s+/i,
+    ""
+  );
+
+  const firstSubtopic = withoutRoman.search(/\s+[A-Z]\.\s+/);
+  let title = withoutRoman;
+  let subtopicText = "";
+
+  if (firstSubtopic >= 0) {
+    title = withoutRoman.slice(0, firstSubtopic).trim();
+    subtopicText = withoutRoman.slice(firstSubtopic).trim();
+  }
+
+  const subtopics = [];
+  const regex = /(?:^|\s)([A-Z])\.\s+(.+?)(?=\s+[A-Z]\.\s+|$)/g;
+  let match;
+
+  while ((match = regex.exec(subtopicText))) {
+    subtopics.push(match[2].trim());
+  }
+
+  return { title, subtopics };
+}
+
 function parseTabbedTopicRowsAdvanced(text) {
   const records = [];
   const lines = text.split("\n");
 
-  let mode = null;
-  let inTopics = false;
+  const courseTypeMatch = text.match(/Course\s+Type\s*:\s*([^\n\t]+)/i);
+  let mode =
+    courseTypeMatch && /lecture/i.test(courseTypeMatch[1])
+      ? "Lecture"
+      : null;
+
+  let inTopicTable = false;
 
   for (const raw of lines) {
     const line = raw.trim();
-
-    if (/^X\.\s*TOPICS AND TEACHING-LEARNING ACTIVITIES/i.test(line)) {
-      inTopics = true;
-      continue;
-    }
-
-    if (!inTopics) continue;
 
     if (/^LECTURE$/i.test(line)) {
       mode = "Lecture";
@@ -274,8 +300,6 @@ function parseTabbedTopicRowsAdvanced(text) {
       continue;
     }
 
-    if (/^XI\.\s*GRADING SYSTEM/i.test(line)) break;
-
     if (!raw.includes("\t")) continue;
 
     const cells = raw
@@ -283,18 +307,38 @@ function parseTabbedTopicRowsAdvanced(text) {
       .map((cell) => cell.trim())
       .filter(Boolean);
 
-    if (cells.length < 2) continue;
-    if (cells.some((cell) => /^Topic$/i.test(cell))) continue;
+    if (!cells.length) continue;
 
-    const topicCell = cells.find((cell) => isRomanTopicHeading(cell)) || cells[0];
+    const lowerCells = cells.map((cell) => cell.toLowerCase());
 
-    const topic = topicCell
-      .replace(
-        /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\.\s+/i,
-        ""
-      )
-      .trim();
+    const isHeader =
+      lowerCells.some((cell) => cell === "topic") &&
+      lowerCells.some((cell) => cell.includes("objective")) &&
+      lowerCells.some((cell) => cell.includes("clo")) &&
+      lowerCells.some(
+        (cell) => cell.includes("hours/week") || cell.includes("hours")
+      );
 
+    if (isHeader) {
+      inTopicTable = true;
+      continue;
+    }
+
+    if (!inTopicTable) continue;
+
+    if (
+      cells.some((cell) => /^midterm examinations?$/i.test(cell)) ||
+      cells.some((cell) => /^final examinations?$/i.test(cell))
+    ) {
+      continue;
+    }
+
+    const topicCell =
+      cells.find((cell) => isRomanTopicHeading(cell)) || cells[0];
+
+    if (!isRomanTopicHeading(topicCell)) continue;
+
+    const parsedTopic = parseTopicCell(topicCell);
     const joined = cells.join(" ");
     const parsed = parseHoursAndWeek(joined);
 
@@ -311,11 +355,11 @@ function parseTabbedTopicRowsAdvanced(text) {
 
     records.push({
       mode,
-      topic,
+      topic: parsedTopic.title,
       hours: parsed.hours,
       schedule: parsed.schedule,
       clo,
-      subtopics: [],
+      subtopics: parsedTopic.subtopics,
       source: "tab",
     });
   }
@@ -365,20 +409,24 @@ function topicRecordsToStatements(records) {
     const label = record.mode ? `${record.mode} topic` : "Topic";
 
     statements.push(`${label}: ${record.topic}.`);
+    statements.push(`Topic name: ${record.topic}.`);
 
     if (record.schedule) {
+      statements.push(`Schedule for ${record.topic}: ${record.schedule}.`);
       statements.push(
         `The ${label.toLowerCase()} ${record.topic} is scheduled during ${record.schedule}.`
       );
     }
 
     if (record.hours) {
+      statements.push(`Hours for ${record.topic}: ${record.hours}.`);
       statements.push(
         `The ${label.toLowerCase()} ${record.topic} has ${record.hours} allocated to it.`
       );
     }
 
     if (record.clo) {
+      statements.push(`CLO for ${record.topic}: CLO ${record.clo}.`);
       statements.push(
         `The ${label.toLowerCase()} ${record.topic} is associated with CLO ${record.clo}.`
       );
@@ -388,6 +436,10 @@ function topicRecordsToStatements(records) {
       statements.push(
         `The subtopics under ${record.topic} are ${record.subtopics.join("; ")}.`
       );
+
+      for (const subtopic of record.subtopics) {
+        statements.push(`${subtopic} is covered under the topic ${record.topic}.`);
+      }
     }
 
     statements.push("");

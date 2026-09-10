@@ -372,6 +372,10 @@ runTestsBtn.addEventListener("click", async () => {
           result.score === null
             ? ""
             : Number(result.score).toFixed(4),
+        Intent:
+          typeof detectQuestionIntent === "function"
+            ? detectQuestionIntent(result.question)
+            : "",
         Chunks: result.selectedChunks.join(" | "),
       }))
     );
@@ -410,6 +414,11 @@ runTestsBtn.addEventListener("click", async () => {
             result.score === null
               ? "—"
               : Number(result.score).toFixed(4)
+          }`,
+          `Intent: ${
+            typeof detectQuestionIntent === "function"
+              ? detectQuestionIntent(result.question)
+              : "unknown"
           }`,
           `Selected chunks: ${result.selectedChunks.join(" | ")}`,
           "",

@@ -59,8 +59,8 @@ const ROLE_PATTERNS = [
 function cleanText(text) {
   return text
     .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ +\n/g, "\n")
+    .replace(/ {2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -92,112 +92,244 @@ function normalizeCourseFields(text) {
 }
 
 function looksLikeName(value) {
-  const v = value.trim();
-  if (v.length < 4 || v.length > 100) return false;
+  const v = String(value || "").trim();
+
+  if (v.length < 5 || v.length > 100) return false;
   if (v.includes(":")) return false;
+  if (/\d/.test(v)) return false;
+  if (/^AUF-/i.test(v)) return false;
   if (/^(prepared|reviewed|evaluated|approved)\s+by/i.test(v)) return false;
   if (/^date\b/i.test(v)) return false;
 
-  // Allow uppercase names and common title prefixes.
+  if (
+    ROLE_PATTERNS.some(
+      (role) => v.toLowerCase() === role.toLowerCase()
+    )
+  ) {
+    return false;
+  }
+
+  const words = v
+    .replace(/[.,]/g, " ")
+    .split(/\s+/)
+    .filter((word) => /[A-Za-z]/.test(word));
+
+  if (words.length < 2) return false;
+
   return (
     v === v.toUpperCase() ||
     /^(Dr\.?|Ms\.?|Mr\.?|Mrs\.?|Prof\.?)/i.test(v)
-  ) && /[A-Za-z]/.test(v);
+  );
 }
 
-function detectFlattenedSignatoryBlock(lines) {
-  const relationships = ["Prepared by", "Reviewed by", "Evaluated by", "Approved by"];
+function canonicalRole(value) {
+  const v = String(value || "").trim();
+  return (
+    ROLE_PATTERNS.find(
+      (role) => v.toLowerCase() === role.toLowerCase()
+    ) || null
+  );
+}
 
-  for (let i = 0; i < lines.length; i++) {
-    const headerLine = lines[i].trim();
+function relationshipLabelsInLine(line) {
+  return RELATIONSHIP_LABELS.filter((label) =>
+    new RegExp(`\\b${label}\\b`, "i").test(String(line || ""))
+  );
+}
 
-    // Accept either tab-separated headings or a flattened single line containing several headings.
-    const matchedRelations = relationships.filter((rel) =>
-      new RegExp(rel, "i").test(headerLine)
-    );
+function parseSignatoryRecords(text) {
+  const rawLines = String(text || "").split("\n");
+  const lines = rawLines.map((line) => line.trim());
+  const records = [];
+  let blockStart = -1;
+  let blockEnd = -1;
 
-    if (matchedRelations.length < 2) continue;
+  // A. True tabular structure.
+  for (let i = 0; i < rawLines.length; i++) {
+    if (!rawLines[i].includes("\t")) continue;
 
-    const names = [];
-    const roles = [];
+    const headers = rawLines[i]
+      .split("\t")
+      .map((cell) => cell.trim().replace(/:$/, ""));
 
-    for (let j = i + 1; j < Math.min(lines.length, i + 12); j++) {
-      const candidate = lines[j].trim();
-      if (!candidate) continue;
+    const relationColumns = headers
+      .map((cell, index) => {
+        const relation = RELATIONSHIP_LABELS.find(
+          (label) => cell.toLowerCase() === label.toLowerCase()
+        );
+        return relation ? { index, relation } : null;
+      })
+      .filter(Boolean);
 
-      if (looksLikeName(candidate)) {
-        names.push(candidate);
-        continue;
+    if (relationColumns.length < 2) continue;
+
+    blockStart = i;
+    blockEnd = Math.min(rawLines.length - 1, i + 12);
+
+    const followingRows = rawLines
+      .slice(i + 1, i + 12)
+      .map((line) => line.split("\t").map((cell) => cell.trim()));
+
+    for (const { index, relation } of relationColumns) {
+      let name = null;
+      let role = null;
+
+      for (const row of followingRows) {
+        const cell = row[index];
+        if (!cell) continue;
+
+        if (!name && looksLikeName(cell)) {
+          name = cell;
+          continue;
+        }
+
+        if (!role) role = canonicalRole(cell);
+        if (name && role) break;
       }
 
-      const role = ROLE_PATTERNS.find(
-        (r) => candidate.toLowerCase() === r.toLowerCase()
-      );
+      if (name) records.push({ relation, name, role });
+    }
 
-      if (role) {
-        roles.push(role);
+    if (records.length) break;
+  }
+
+  // B. Flattened or stacked heading group.
+  if (!records.length) {
+    for (let i = 0; i < lines.length; i++) {
+      const relations = [];
+      let lastHeaderIndex = i;
+
+      for (let j = i; j < Math.min(lines.length, i + 5); j++) {
+        const found = relationshipLabelsInLine(lines[j]);
+
+        if (!found.length) {
+          if (relations.length) break;
+          continue;
+        }
+
+        for (const relation of found) {
+          if (!relations.includes(relation)) relations.push(relation);
+        }
+
+        lastHeaderIndex = j;
       }
 
-      // Once we have enough names and roles, stop scanning.
-      if (
-        names.length >= matchedRelations.length &&
-        roles.length >= matchedRelations.length
-      ) {
+      if (relations.length < 2) continue;
+
+      const names = [];
+      const roles = [];
+
+      blockStart = i;
+      blockEnd = Math.min(lines.length - 1, lastHeaderIndex + 20);
+
+      for (let j = lastHeaderIndex + 1; j <= blockEnd; j++) {
+        const candidate = lines[j];
+        if (!candidate) continue;
+
+        if (looksLikeName(candidate)) {
+          names.push(candidate);
+          continue;
+        }
+
+        const role = canonicalRole(candidate);
+        if (role) roles.push(role);
+      }
+
+      if (names.length >= relations.length) {
+        relations.forEach((relation, index) => {
+          records.push({
+            relation,
+            name: names[index],
+            role: roles[index] || null,
+          });
+        });
         break;
       }
     }
+  }
 
-    if (names.length >= matchedRelations.length) {
-      return {
-        startIndex: i,
-        endIndex: i + 12,
-        relationships: matchedRelations,
-        names: names.slice(0, matchedRelations.length),
-        roles: roles.slice(0, matchedRelations.length),
-      };
+  // C. Simple relation -> person fallback.
+  if (!records.length) {
+    for (let i = 0; i < lines.length; i++) {
+      const relation = RELATIONSHIP_LABELS.find((label) =>
+        new RegExp(`^${label}:?$`, "i").test(lines[i])
+      );
+
+      if (!relation) continue;
+
+      let name = null;
+      let role = null;
+
+      for (let j = i + 1; j < Math.min(lines.length, i + 7); j++) {
+        if (!name && looksLikeName(lines[j])) {
+          name = lines[j];
+          continue;
+        }
+
+        if (name && !role) role = canonicalRole(lines[j]);
+        if (name && role) break;
+      }
+
+      if (name) records.push({ relation, name, role });
     }
   }
 
-  return null;
+  // Extra name-role pairs near the signatory block, e.g. second chair.
+  const rolePairs = [];
+  const scanStart = blockStart >= 0 ? blockStart : Math.max(0, lines.length - 40);
+  const scanEnd =
+    blockEnd >= 0 ? Math.min(lines.length - 1, blockEnd + 12) : lines.length - 1;
+
+  for (let i = scanStart; i <= scanEnd; i++) {
+    if (!looksLikeName(lines[i])) continue;
+
+    // Only pair a role with the immediately following non-empty line.
+    // This prevents a row of several names from all inheriting the first role.
+    let j = i + 1;
+    while (j <= scanEnd && !lines[j]) j++;
+
+    if (j <= scanEnd) {
+      const role = canonicalRole(lines[j]);
+      if (role) {
+        rolePairs.push({ name: lines[i], role });
+      }
+    }
+  }
+
+  for (const record of records) {
+    if (record.role) continue;
+    const matching = rolePairs.find(
+      (pair) => pair.name.toLowerCase() === record.name.toLowerCase()
+    );
+    if (matching) record.role = matching.role;
+  }
+
+  // Relation records already have their role determined by column/order.
+  // Keep rolePairs only for additional people not represented by those records.
+  const relationNames = new Set(
+    records.map((record) => record.name.toLowerCase())
+  );
+
+  const extraRolePairs = rolePairs.filter(
+    (pair) => !relationNames.has(pair.name.toLowerCase())
+  );
+
+  return { records, rolePairs: extraRolePairs, blockStart, blockEnd };
 }
 
 function normalizeNameRolePairs(text) {
-  const lines = text.split("\n");
-  const trimmedLines = lines.map((line) => line.trim());
+  const parsed = parseSignatoryRecords(text);
   const added = [];
 
-  const signatoryBlock = detectFlattenedSignatoryBlock(trimmedLines);
-
-  for (let i = 1; i < trimmedLines.length; i++) {
-    // Do not use the risky adjacent-line heuristic inside the signatory block.
-    if (
-      signatoryBlock &&
-      i >= signatoryBlock.startIndex &&
-      i <= signatoryBlock.endIndex
-    ) {
-      continue;
-    }
-
-    const role = ROLE_PATTERNS.find(
-      (candidate) => trimmedLines[i].toLowerCase() === candidate.toLowerCase()
-    );
-
-    if (!role) continue;
-
-    const possibleName = trimmedLines[i - 1];
-    if (!looksLikeName(possibleName)) continue;
-
-    added.push(`${possibleName} is the ${role.toLowerCase()}.`);
+  for (const record of parsed.records) {
+    if (!record.role) continue;
+    added.push(`The ${record.role.toLowerCase()} is ${record.name}.`);
+    added.push(`${record.name} is the ${record.role.toLowerCase()}.`);
   }
 
-  // If we detected the flattened signatory block, pair names and roles by column order.
-  if (signatoryBlock) {
-    signatoryBlock.names.forEach((name, index) => {
-      const role = signatoryBlock.roles[index];
-      if (role) {
-        added.push(`${name} is the ${role.toLowerCase()}.`);
-      }
-    });
+  for (const pair of parsed.rolePairs) {
+    added.push(`The ${pair.role.toLowerCase()} is ${pair.name}.`);
+    added.push(`${pair.name} is the ${pair.role.toLowerCase()}.`);
   }
 
   if (!added.length) return text;
@@ -208,79 +340,14 @@ function normalizeNameRolePairs(text) {
 }
 
 function normalizeSignatories(text) {
+  const parsed = parseSignatoryRecords(text);
   const added = [];
-  const rawLines = text.split("\n");
-  const lines = rawLines.map((line) => line.trim());
 
-  // Pattern A: flattened multi-column signatory block.
-  const flattened = detectFlattenedSignatoryBlock(lines);
-
-  if (flattened) {
-    flattened.relationships.forEach((relation, index) => {
-      const name = flattened.names[index];
-      if (name) {
-        added.push(`The syllabus was ${relation.toLowerCase()} ${name}.`);
-      }
-    });
-  }
-
-  // Pattern B: tab-delimited rows produced by PDF/DOCX extraction.
-  const tabLines = rawLines
-    .map((line) => line.split("	").map((cell) => cell.trim()).filter(Boolean))
-    .filter((cells) => cells.length >= 2);
-
-  for (let i = 0; i < tabLines.length; i++) {
-    const header = tabLines[i].map((cell) => cell.replace(/:$/, ""));
-
-    const relationIndexes = header
-      .map((cell, idx) => {
-        const found = RELATIONSHIP_LABELS.find(
-          (label) => cell.toLowerCase() === label.toLowerCase()
-        );
-        return found ? { idx, relation: found } : null;
-      })
-      .filter(Boolean);
-
-    if (!relationIndexes.length) continue;
-
-    const nextRows = tabLines.slice(i + 1, i + 5);
-
-    for (const { idx, relation } of relationIndexes) {
-      for (const row of nextRows) {
-        const candidate = row[idx];
-        if (candidate && looksLikeName(candidate)) {
-          added.push(`The syllabus was ${relation.toLowerCase()} ${candidate}.`);
-          break;
-        }
-      }
-    }
-  }
-
-  // Pattern C: simple vertical blocks, but only when not already handled as flattened.
-  if (!flattened) {
-    for (let i = 0; i < lines.length; i++) {
-      const relation = RELATIONSHIP_LABELS.find((label) =>
-        new RegExp(`^${label}:?$`, "i").test(lines[i])
-      );
-      if (!relation) continue;
-
-      for (let j = i + 1; j < Math.min(lines.length, i + 8); j++) {
-        const candidate = lines[j];
-
-        if (
-          RELATIONSHIP_LABELS.some((label) =>
-            new RegExp(`^${label}:?$`, "i").test(candidate)
-          )
-        ) {
-          continue;
-        }
-
-        if (looksLikeName(candidate)) {
-          added.push(`The syllabus was ${relation.toLowerCase()} ${candidate}.`);
-          break;
-        }
-      }
-    }
+  for (const record of parsed.records) {
+    added.push(
+      `The syllabus was ${record.relation.toLowerCase()} ${record.name}.`
+    );
+    added.push(`${record.relation}: ${record.name}.`);
   }
 
   if (!added.length) return text;

@@ -199,11 +199,98 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function detectQuestionIntent(question) {
+  const q = String(question || "").toLowerCase();
+
+  if (
+    /(course code|course title|credit units?|prerequisites?|mode of delivery|contact hours?)/.test(q)
+  ) {
+    return "course-details";
+  }
+
+  if (
+    /(instructor|prepared by|reviewed by|evaluated by|approved by|dean|bscs chair|bsit chair|program chair|who prepared|who reviewed|who approved|who evaluated)/.test(q)
+  ) {
+    return "signatories";
+  }
+
+  if (/(midterm|final exam|grading|weight|final raw grade)/.test(q)) {
+    return "grading";
+  }
+
+  if (
+    /(associated with|topic|week|weeks|hours allocated|how many hours|lecture topic|laboratory topic|lab topic|covers|covered under|taught during)/.test(q)
+  ) {
+    return "topics";
+  }
+
+  if (
+    /(?:what is|state|give|describe)\s+(?:the\s+)?clo\s*\d+/i.test(question) ||
+    /course learning outcome/i.test(question)
+  ) {
+    return "clo";
+  }
+
+  if (
+    /(?:what is|state|give|describe)\s+(?:the\s+)?mco\s*\d+/i.test(question) ||
+    /(major course outcome|terminal requirement)/i.test(question)
+  ) {
+    return "mco";
+  }
+
+  if (
+    /(?:what is|state|give|describe)\s+(?:the\s+)?plo\s*\w+/i.test(question) ||
+    /program learning outcome/i.test(question)
+  ) {
+    return "plo";
+  }
+
+  if (/reference|references|book|documentation/.test(q)) {
+    return "references";
+  }
+
+  return "general";
+}
+
+function chunksForIntent(intent, chunks) {
+  const matchers = {
+    "course-details": (title) =>
+      title.includes("[normalized course details]"),
+    signatories: (title) =>
+      title.includes("[normalized signatory relationships]") ||
+      title.includes("[normalized name and role relationships]"),
+    grading: (title) =>
+      title.includes("[normalized grading system]"),
+    topics: (title) =>
+      title.includes("[normalized topic records]"),
+    clo: (title) =>
+      title.includes("[normalized course learning outcomes]"),
+    mco: (title) =>
+      title.includes("[normalized terminal requirements]"),
+    plo: (title) =>
+      title.includes("[normalized program learning outcomes]"),
+    references: (title) =>
+      title.includes("references"),
+  };
+
+  const matcher = matchers[intent];
+  if (!matcher) return [];
+
+  return chunks.filter((chunk) =>
+    matcher(chunk.title.toLowerCase())
+  );
+}
+
 function selectRelevantChunks(question, chunks, limit = 3) {
-  return chunks
+  const intent = detectQuestionIntent(question);
+  const preferred = chunksForIntent(intent, chunks);
+  const pool = preferred.length ? preferred : chunks;
+
+  return pool
     .map((chunk) => ({
       ...chunk,
       retrievalScore: scoreChunk(question, chunk),
+      intent,
     }))
     .sort((a, b) => b.retrievalScore - a.retrievalScore)
     .slice(0, limit);

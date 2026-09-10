@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.4 of the final MobileBERT Syllabus Q&A project, with console-friendly evaluation output.
+This is Version 8.5 of the final MobileBERT Syllabus Q&A project, with focused preprocessing and retrieval fixes.
 
 ## What this version does
 
@@ -301,3 +301,17 @@ When an evaluation test set finishes, the browser console now prints:
 - a plain-text copyable report
 
 Open DevTools → Console, run the tests, then copy the report into ChatGPT for debugging.
+
+
+## Version 8.5 debugging fixes
+
+- Preserves tabs during normalization.
+- Reworks signatory reconstruction for flattened, stacked, and tabular layouts.
+- Rejects document codes as person names.
+- Adds explicit role sentences such as `The instructor is NAME.`
+- Improves reconstructed DOCX topic-table parsing.
+- Separates topic titles from A./B./C. subtopics.
+- Adds explicit schedule, hours, and CLO statements for each topic.
+- Uses intent-first context routing instead of broad keyword boosting.
+- Direct CLO questions now prefer CLO chunks instead of topic chunks.
+- Console reports now include detected question intent.
