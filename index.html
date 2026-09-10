@@ -106,6 +106,16 @@
 
     <section class="card debug-card">
       <details>
+        <summary>Retrieved context for last question</summary>
+        <p class="debug-help">
+          Version 4 selects the most relevant semantic chunks before running MobileBERT.
+        </p>
+        <pre id="retrievedContext">Ask a question to view the selected context.</pre>
+      </details>
+    </section>
+
+    <section class="card debug-card">
+      <details>
         <summary>Processed context</summary>
         <p class="debug-help">
           This is the context sent to MobileBERT. Version 3 adds explicit course-detail,
@@ -118,6 +128,7 @@
 
   <script src="js/extractor.js"></script>
   <script src="js/normalizer.js"></script>
+  <script src="js/chunker.js"></script>
   <script src="js/qna.js"></script>
   <script src="js/app.js"></script>
 </body>

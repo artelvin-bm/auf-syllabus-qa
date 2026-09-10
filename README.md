@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 3 of the MobileBERT Syllabus Q&A project.
+This is Version 4 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -77,3 +77,26 @@ This version includes PDF/DOCX upload. Robust syllabus-specific topic-table reco
 ## Remaining limitations
 
 The topic parser currently works best when the extractor produces tab-delimited rows. Very complex PDF tables can still require more coordinate-based row reconstruction. Long syllabi will also need semantic chunking before the final version.
+
+
+## Version 4 additions
+
+- Semantic chunking by syllabus section.
+- Normalized blocks become their own semantic chunks.
+- Large chunks are split into smaller parts instead of sending the whole syllabus at once.
+- Lightweight keyword-based retrieval ranks chunks for each question.
+- Intent boosts help route common syllabus questions to:
+  - Course Details
+  - Signatories
+  - Grading System
+  - Topics and Teaching-Learning Activities
+  - CLO/PLO sections
+  - References
+- MobileBERT receives only the top relevant chunks.
+- Added a debug panel showing which chunks were selected and their retrieval scores.
+
+## Why this matters
+
+MobileBERT extractive QnA works better when the answer is inside a focused context instead of a long full syllabus. Version 4 separates document understanding from answer extraction:
+
+Question → relevant chunk retrieval → MobileBERT answer extraction

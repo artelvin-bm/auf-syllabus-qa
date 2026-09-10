@@ -9,6 +9,7 @@ const fileMessage = document.getElementById("fileMessage");
 const processMessage = document.getElementById("processMessage");
 const qaMessage = document.getElementById("qaMessage");
 const processedContext = document.getElementById("processedContext");
+const retrievedContext = document.getElementById("retrievedContext");
 const modelBadge = document.getElementById("modelBadge");
 const answerPanel = document.getElementById("answerPanel");
 const answerText = document.getElementById("answerText");
@@ -17,6 +18,7 @@ const answerCountText = document.getElementById("answerCountText");
 const candidateList = document.getElementById("candidateList");
 
 let currentContext = "";
+let currentChunks = [];
 
 const sampleText = `V. COURSE DETAILS
 
@@ -78,7 +80,9 @@ function processSyllabus() {
   }
 
   currentContext = normalizeSyllabus(raw);
+  currentChunks = chunkBySections(currentContext);
   processedContext.textContent = currentContext;
+  retrievedContext.textContent = `Created ${currentChunks.length} semantic chunks. Ask a question to view the selected context.`;
   askBtn.disabled = false;
 
   const originalLength = raw.length;
@@ -86,7 +90,7 @@ function processSyllabus() {
 
   setMessage(
     processMessage,
-    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context.`,
+    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context · ${currentChunks.length} semantic chunks.`,
     "success"
   );
 
@@ -122,7 +126,12 @@ async function askQuestion() {
       setModelStatus("Loading MobileBERT…", "loading");
     }
 
-    const answers = await findAnswers(question, currentContext);
+    const retrieval = buildRetrievedContext(question, currentChunks, 3);
+    const qnaContext = retrieval.context || currentContext;
+    retrievedContext.textContent = retrieval.selected
+      .map((chunk, index) => `#${index + 1} ${chunk.title} · retrieval score ${chunk.retrievalScore}\n\n${chunk.content}`)
+      .join("\n\n------------------------------\n\n");
+    const answers = await findAnswers(question, qnaContext);
 
     setModelStatus("MobileBERT ready", "ready");
 
@@ -190,6 +199,7 @@ fileInput.addEventListener("change", async () => {
 
   askBtn.disabled = true;
   currentContext = "";
+  currentChunks = [];
   resetAnswer();
 
   setMessage(fileMessage, `Extracting ${file.name}...`);
@@ -228,6 +238,8 @@ clearBtn.addEventListener("click", () => {
   fileInput.value = "";
   questionInput.value = "";
   currentContext = "";
+  currentChunks = [];
+  retrievedContext.textContent = "Ask a question to view the selected context.";
   processedContext.textContent =
     "Process a syllabus to view the normalized context.";
   askBtn.disabled = true;
