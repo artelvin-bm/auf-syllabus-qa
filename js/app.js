@@ -150,7 +150,7 @@ async function askQuestion() {
     const retrieval = buildRetrievedContext(question, currentChunks, 3);
     const qnaContext = retrieval.context || currentContext;
     retrievedContext.textContent = retrieval.selected
-      .map((chunk, index) => `#${index + 1} ${chunk.title} · retrieval score ${chunk.retrievalScore}\n\n${chunk.content}`)
+      .map((chunk, index) => `#${index + 1} ${chunk.title} · retrieval score ${chunk.retrievalScore}\n\n${chunk.focusedContent || chunk.content}`)
       .join("\n\n------------------------------\n\n");
     const answers = await findAnswers(question, qnaContext);
 

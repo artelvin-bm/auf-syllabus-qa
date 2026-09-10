@@ -34,8 +34,10 @@ function parseCloValue(value) {
   const direct = value.match(/^(?:CLO\s*)?(\d+(?:\s*,\s*\d+)*)$/i);
   if (direct) return direct[1].replace(/\s+/g, "");
 
-  const embedded = value.match(/\bCLO\s*(\d+(?:\s*,\s*\d+)*)\b/i);
-  if (embedded) return embedded[1].replace(/\s+/g, "");
+  const matches = [...String(value).matchAll(/\bCLO\s*(\d+)\b/gi)];
+  if (matches.length) {
+    return matches.map((match) => match[1]).join(",");
+  }
 
   return null;
 }
@@ -248,31 +250,45 @@ function parseTopicBlocks(text) {
 }
 
 function parseTopicCell(cell) {
-  const cleaned = String(cell || "").replace(/\s+/g, " ").trim();
+  const raw = String(cell || "").trim();
 
-  const withoutRoman = cleaned.replace(
+  const blocks = raw
+    .split(/\s*\|\|\s*/)
+    .map((part) => part.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  let first = blocks[0] || raw.replace(/\s+/g, " ").trim();
+
+  first = first.replace(
     /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\.\s+/i,
     ""
   );
 
-  const firstSubtopic = withoutRoman.search(/\s+[A-Z]\.\s+/);
-  let title = withoutRoman;
-  let subtopicText = "";
+  const subtopics = blocks.slice(1).map((value) =>
+    value.replace(/^[A-Z]\.\s+/, "").trim()
+  );
 
-  if (firstSubtopic >= 0) {
-    title = withoutRoman.slice(0, firstSubtopic).trim();
-    subtopicText = withoutRoman.slice(firstSubtopic).trim();
+  // Fallback for PDF cells where subtopics are embedded in one string.
+  if (!subtopics.length) {
+    const embeddedStart = first.search(/\s+[A-Z]\.\s+/);
+
+    if (embeddedStart >= 0) {
+      const remainder = first.slice(embeddedStart).trim();
+      first = first.slice(0, embeddedStart).trim();
+
+      const regex = /(?:^|\s)([A-Z])\.\s+(.+?)(?=\s+[A-Z]\.\s+|$)/g;
+      let match;
+
+      while ((match = regex.exec(remainder))) {
+        subtopics.push(match[2].trim());
+      }
+    }
   }
 
-  const subtopics = [];
-  const regex = /(?:^|\s)([A-Z])\.\s+(.+?)(?=\s+[A-Z]\.\s+|$)/g;
-  let match;
-
-  while ((match = regex.exec(subtopicText))) {
-    subtopics.push(match[2].trim());
-  }
-
-  return { title, subtopics };
+  return {
+    title: first.trim(),
+    subtopics,
+  };
 }
 
 function parseTabbedTopicRowsAdvanced(text) {
@@ -336,9 +352,15 @@ function parseTabbedTopicRowsAdvanced(text) {
     const topicCell =
       cells.find((cell) => isRomanTopicHeading(cell)) || cells[0];
 
-    if (!isRomanTopicHeading(topicCell)) continue;
+    // DOCX syllabus tables often omit Roman numerals inside the actual cell.
+    // Once a table header has been detected, the first column is the topic.
+    if (!topicCell || /^(midterm|final) examinations?$/i.test(topicCell)) {
+      continue;
+    }
 
     const parsedTopic = parseTopicCell(topicCell);
+
+    if (!parsedTopic.title) continue;
     const joined = cells.join(" ");
     const parsed = parseHoursAndWeek(joined);
 

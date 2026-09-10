@@ -69,26 +69,72 @@ function stripTrailingPunctuation(value) {
   return value.trim().replace(/[.;]+$/, "");
 }
 
+function extractCourseFieldValues(text) {
+  const labels = [
+    "Course Code",
+    "Course Title",
+    "Course Type",
+    "Credit Units",
+    "Contact Hours",
+    "Prerequisites",
+    "Mode of Delivery",
+    "Course Description",
+  ];
+
+  const escaped = labels.map((label) =>
+    label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
+
+  const boundary = `(?=\\s*(?:${escaped.join("|")}):|\\n\\s*(?:VI\\.|VII\\.|VIII\\.|IX\\.|X\\.|XI\\.|XII\\.)|$)`;
+  const values = {};
+
+  for (const label of labels) {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(
+      `${escapedLabel}\\s*:\\s*([\\s\\S]*?)${boundary}`,
+      "i"
+    );
+
+    const match = text.match(regex);
+
+    if (match) {
+      values[label] = match[1]
+        .replace(/\\t+/g, " ")
+        .replace(/\\n+/g, " ")
+        .replace(/\\s+/g, " ")
+        .trim()
+        .replace(/[.;]+$/, "");
+    }
+  }
+
+  return values;
+}
+
 function normalizeCourseFields(text) {
-  const lines = text.split("\n");
+  const values = extractCourseFieldValues(text);
   const added = [];
 
-  for (const line of lines) {
-    const trimmed = line.trim();
+  const sentenceBuilders = {
+    "Course Code": (v) => `The course code is ${v}.`,
+    "Course Title": (v) => `The course title is ${v}.`,
+    "Course Type": (v) => `The course type is ${v}.`,
+    "Credit Units": (v) => `The credit units are ${v}.`,
+    "Contact Hours": (v) => `The contact hours are ${v}.`,
+    "Prerequisites": (v) => `The prerequisites are ${v}.`,
+    "Mode of Delivery": (v) => `The mode of delivery is ${v}.`,
+    "Course Description": (v) => `The course description is ${v}.`,
+  };
 
-    for (const rule of COURSE_FIELD_RULES) {
-      const match = trimmed.match(rule.regex);
-      if (!match) continue;
+  for (const [label, value] of Object.entries(values)) {
+    if (!value || !sentenceBuilders[label]) continue;
 
-      const value = stripTrailingPunctuation(match[1]);
-      if (value) added.push(rule.sentence(value));
-      break;
-    }
+    added.push(`${label}: ${value}.`);
+    added.push(sentenceBuilders[label](value));
   }
 
   if (!added.length) return text;
 
-  return `${text}\n\n[Normalized Course Details]\n${[...new Set(added)].join("\n")}`;
+  return `${text}\\n\\n[Normalized Course Details]\\n${added.join("\\n")}`;
 }
 
 function looksLikeName(value) {

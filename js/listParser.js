@@ -1,7 +1,10 @@
 // Version 7: CLO, MCO, PLO, and structured list normalization.
 
 function findSection(text, startPattern, endPatterns = []) {
-  const lines = text.split("\n");
+  const normalized = String(text || "").replace(/\r\n?/g, "\n");
+
+  // Try ordinary line-based detection first.
+  const lines = normalized.split("\n");
   let start = -1;
   let end = lines.length;
 
@@ -11,15 +14,89 @@ function findSection(text, startPattern, endPatterns = []) {
       continue;
     }
 
-    if (start !== -1 && endPatterns.some((pattern) => pattern.test(lines[i].trim()))) {
+    if (
+      start !== -1 &&
+      endPatterns.some((pattern) => pattern.test(lines[i].trim()))
+    ) {
       end = i;
       break;
     }
   }
 
-  if (start === -1) return [];
+  if (start !== -1) {
+    return lines.slice(start, end);
+  }
 
-  return lines.slice(start, end);
+  // PDF.js can split section headings across multiple lines.
+  // Search a whitespace-collapsed copy and map back by character positions.
+  const searchable = normalized.replace(/\s+/g, " ");
+
+  const patternSources = [
+    {
+      original: /^VI\.\s*DESCRIPTION OF THE TERMINAL REQUIREMENT/i,
+      flexible: /VI\.\s*DESCRIPTION\s+OF\s+THE\s+TERMINAL\s+REQUIREMENT/i,
+    },
+    {
+      original: /^VII\.\s*PROGRAM LEARNING OUTCOMES/i,
+      flexible: /VII\.\s*PROGRAM\s+LEARNING\s+OUTCOMES/i,
+    },
+    {
+      original: /^VIII\.\s*COURSE LEARNING OUTCOMES/i,
+      flexible: /VIII\.\s*COURSE\s+LEARNING\s+OUTCOMES(?:\s*\(CLOs\))?/i,
+    },
+    {
+      original: /^IX\.\s*CURRICULAR MAPPING/i,
+      flexible: /IX\.\s*CURRICULAR\s+MAPPING/i,
+    },
+    {
+      original: /^IV\.\s*INSTITUTIONAL LEARNING OUTCOMES/i,
+      flexible: /IV\.\s*INSTITUTIONAL\s+LEARNING\s+OUTCOMES/i,
+    },
+    {
+      original: /^V\.\s*COURSE DETAILS/i,
+      flexible: /V\.\s*COURSE\s+DETAILS/i,
+    },
+    {
+      original: /^III\.\s*CORE VALUES/i,
+      flexible: /III\.\s*CORE\s+VALUES/i,
+    },
+  ];
+
+  const startEntry = patternSources.find(
+    (entry) => entry.original.source === startPattern.source
+  );
+
+  if (!startEntry) return [];
+
+  const startMatch = searchable.match(startEntry.flexible);
+  if (!startMatch) return [];
+
+  const startIndex = startMatch.index + startMatch[0].length;
+
+  let endIndex = searchable.length;
+
+  for (const endPattern of endPatterns) {
+    const endEntry = patternSources.find(
+      (entry) => entry.original.source === endPattern.source
+    );
+
+    if (!endEntry) continue;
+
+    const tail = searchable.slice(startIndex);
+    const match = tail.match(endEntry.flexible);
+
+    if (match) {
+      endIndex = Math.min(endIndex, startIndex + match.index);
+    }
+  }
+
+  return searchable
+    .slice(startIndex, endIndex)
+    .replace(/(\d+\.)\s+/g, "\n$1 ")
+    .replace(/(MCO\d+\s*:)/gi, "\n$1")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function joinWrappedListItems(lines, itemPattern) {

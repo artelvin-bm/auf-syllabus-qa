@@ -296,15 +296,100 @@ function selectRelevantChunks(question, chunks, limit = 3) {
     .slice(0, limit);
 }
 
+function scoreTextUnit(question, text) {
+  const qTokens = tokenizeForRetrieval(question);
+  const lower = text.toLowerCase();
+  let score = 0;
+
+  for (const token of qTokens) {
+    if (lower.includes(token)) score += 3;
+  }
+
+  const q = question.toLowerCase();
+
+  if (q.includes("prepared") && lower.includes("prepared by")) score += 12;
+  if (q.includes("reviewed") && lower.includes("reviewed by")) score += 12;
+  if (q.includes("evaluated") && lower.includes("evaluated by")) score += 12;
+  if (q.includes("approved") && lower.includes("approved by")) score += 12;
+  if (q.includes("instructor") && lower.includes("instructor")) score += 12;
+  if (q.includes("bscs chair") && lower.includes("bscs chair")) score += 12;
+  if (q.includes("bsit chair") && lower.includes("bsit chair")) score += 12;
+
+  const cloMatch = q.match(/\bclo\s*(\d+)\b/);
+  if (cloMatch && lower.includes(`clo${cloMatch[1]}`)) score += 15;
+  if (cloMatch && lower.includes(`clo ${cloMatch[1]}`)) score += 15;
+
+  return score;
+}
+
+function focusChunkContent(question, chunk, intent) {
+  const content = chunk.content;
+
+  if (!content) return content;
+
+  // Topic and learning-outcome normalizers separate records with blank lines.
+  if (intent === "topics" || intent === "clo" || intent === "mco" || intent === "plo") {
+    const units = content
+      .split(/\n{2,}/)
+      .map((unit) => unit.trim())
+      .filter(Boolean);
+
+    if (units.length > 1) {
+      return units
+        .map((unit) => ({
+          text: unit,
+          score: scoreTextUnit(question, unit),
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2)
+        .map((item) => item.text)
+        .join("\n\n");
+    }
+  }
+
+  // Signatory/course-detail/grading chunks work well line-by-line.
+  if (
+    intent === "signatories" ||
+    intent === "course-details" ||
+    intent === "grading"
+  ) {
+    const lines = content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const scored = lines
+      .map((line) => ({
+        text: line,
+        score: scoreTextUnit(question, line),
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    const positive = scored.filter((item) => item.score > 0).slice(0, 6);
+
+    if (positive.length) {
+      return positive.map((item) => item.text).join("\n");
+    }
+  }
+
+  return content;
+}
+
 function buildRetrievedContext(question, chunks, limit = 3) {
   const selected = selectRelevantChunks(question, chunks, limit);
+  const intent = detectQuestionIntent(question);
+
+  const focused = selected.map((chunk) => ({
+    ...chunk,
+    focusedContent: focusChunkContent(question, chunk, intent),
+  }));
 
   return {
-    selected,
-    context: selected
+    selected: focused,
+    context: focused
       .map(
         (chunk) =>
-          `[Context Section: ${chunk.title}]\n${chunk.content}`
+          `[Context Section: ${chunk.title}]\n${chunk.focusedContent}`
       )
       .join("\n\n"),
   };

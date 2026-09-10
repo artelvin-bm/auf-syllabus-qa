@@ -131,7 +131,17 @@ async function extractDocx(file) {
 
     table.querySelectorAll("tr").forEach((row) => {
       const cells = [...row.querySelectorAll("th, td")]
-        .map((cell) => cell.textContent.replace(/\s+/g, " ").trim())
+        .map((cell) => {
+          const blocks = [...cell.querySelectorAll("p, li")]
+            .map((node) => node.textContent.replace(/\s+/g, " ").trim())
+            .filter(Boolean);
+
+          if (blocks.length) {
+            return blocks.join(" || ");
+          }
+
+          return cell.textContent.replace(/\s+/g, " ").trim();
+        })
         .filter(Boolean);
 
       if (cells.length) {

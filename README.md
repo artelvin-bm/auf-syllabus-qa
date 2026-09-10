@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.5 of the final MobileBERT Syllabus Q&A project, with focused preprocessing and retrieval fixes.
+This is Version 8.6 of the final MobileBERT Syllabus Q&A project, with focused micro-context and parser fixes.
 
 ## What this version does
 
@@ -315,3 +315,17 @@ Open DevTools → Console, run the tests, then copy the report into ChatGPT for 
 - Uses intent-first context routing instead of broad keyword boosting.
 - Direct CLO questions now prefer CLO chunks instead of topic chunks.
 - Console reports now include detected question intent.
+
+
+## Version 8.6 debugging fixes
+
+- DOCX extraction now preserves paragraph boundaries inside table cells using `||`.
+- DOCX topic rows no longer need Roman numerals to be recognized.
+- Topic title and subtopics are separated more reliably.
+- Multiple CLO values inside a topic cell are preserved.
+- Course Details are extracted using field-to-field boundaries instead of line-only matching.
+- CLO/MCO/PLO section detection now tolerates headings split across PDF lines.
+- Relevant chunks are further reduced into question-focused micro-context before MobileBERT runs.
+- Signatory questions prioritize the exact Prepared/Reviewed/Evaluated/Approved line.
+- Topic questions prioritize the matching topic record.
+- Direct `What is CLO 2?` questions prioritize the matching CLO record.
