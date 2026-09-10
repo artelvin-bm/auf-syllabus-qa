@@ -11,6 +11,9 @@
 
   <!-- TensorFlow.js MobileBERT QnA -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/qna"></script>
+
+  <!-- Mammoth.js for DOCX extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.2/mammoth.browser.min.js"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -30,12 +33,22 @@
       <div class="section-heading">
         <div>
           <span class="step-number">1</span>
-          <h2>Paste syllabus text</h2>
+          <h2>Add a syllabus</h2>
         </div>
         <button id="loadSampleBtn" class="button secondary" type="button">
           Load PTF50 sample
         </button>
       </div>
+
+      <div class="upload-box">
+        <input id="fileInput" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        <div>
+          <strong>Upload PDF or DOCX</strong>
+          <p>Text is extracted in your browser. PDF extraction preserves line positions where possible.</p>
+        </div>
+      </div>
+
+      <div class="or-divider"><span>OR</span></div>
 
       <textarea
         id="syllabusInput"
@@ -52,6 +65,7 @@
         </button>
       </div>
 
+      <p id="fileMessage" class="message"></p>
       <p id="processMessage" class="message"></p>
     </section>
 
@@ -102,6 +116,7 @@
     </section>
   </main>
 
+  <script src="js/extractor.js"></script>
   <script src="js/normalizer.js"></script>
   <script src="js/qna.js"></script>
   <script src="js/app.js"></script>

@@ -309,3 +309,59 @@ pre {
     width: 100%;
   }
 }
+
+
+.upload-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px dashed #b8c5d6;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.upload-box input[type="file"] {
+  width: auto;
+  max-width: 48%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.upload-box p {
+  margin: 5px 0 0;
+  color: #667589;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #8491a2;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #dce4ee;
+}
+
+@media (max-width: 720px) {
+  .upload-box {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .upload-box input[type="file"] {
+    max-width: 100%;
+  }
+}

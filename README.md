@@ -1,10 +1,14 @@
 # Syllabus Q&A MVP
 
-This is the first runnable version of the MobileBERT Syllabus Q&A project.
+This is Version 2 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
 - Accepts pasted syllabus text.
+- Uploads and extracts PDF files with PDF.js.
+- Uploads and extracts DOCX files with Mammoth.js.
+- Preserves large PDF horizontal gaps as tabs to help later table reconstruction.
+- Reconstructs DOCX table rows as tab-delimited lines.
 - Cleans whitespace.
 - Normalizes common Course Details fields.
 - Adds simple name/role relationships.
@@ -32,13 +36,11 @@ This is the first runnable version of the MobileBERT Syllabus Q&A project.
 
 The MobileBERT model is downloaded from the internet on first load, so the first startup may be slow.
 
-This MVP does **not yet** include PDF/DOCX upload or robust table reconstruction.
+This version includes PDF/DOCX upload. Robust syllabus-specific topic-table reconstruction is the next phase.
 
 ## Next build phase
 
-- PDF.js extraction
-- Mammoth.js DOCX extraction
-- layout/table reconstruction
+- syllabus-specific layout/table reconstruction
 - topic-row normalization
 - lecture/laboratory handling
 - semantic chunking for long syllabi

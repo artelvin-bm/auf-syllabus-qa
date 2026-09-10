@@ -1,9 +1,11 @@
 const syllabusInput = document.getElementById("syllabusInput");
+const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const clearBtn = document.getElementById("clearBtn");
 const loadSampleBtn = document.getElementById("loadSampleBtn");
 const questionInput = document.getElementById("questionInput");
 const askBtn = document.getElementById("askBtn");
+const fileMessage = document.getElementById("fileMessage");
 const processMessage = document.getElementById("processMessage");
 const qaMessage = document.getElementById("qaMessage");
 const processedContext = document.getElementById("processedContext");
@@ -181,10 +183,49 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files?.[0];
+  if (!file) return;
+
+  askBtn.disabled = true;
+  currentContext = "";
+  resetAnswer();
+
+  setMessage(fileMessage, `Extracting ${file.name}...`);
+  setMessage(processMessage, "");
+
+  try {
+    const result = await extractFile(file);
+    syllabusInput.value = result.text;
+
+    const details = [];
+    if (result.metadata.pages) details.push(`${result.metadata.pages} pages`);
+    if (Number.isInteger(result.metadata.tables)) {
+      details.push(`${result.metadata.tables} detected DOCX tables`);
+    }
+    if (result.metadata.warnings) {
+      details.push(`${result.metadata.warnings} extraction warnings`);
+    }
+
+    setMessage(
+      fileMessage,
+      `${result.metadata.type} extracted successfully${details.length ? ` · ${details.join(" · ")}` : ""}.`,
+      "success"
+    );
+
+    processSyllabus();
+  } catch (error) {
+    console.error(error);
+    setMessage(fileMessage, `Could not extract file: ${error.message}`, "error");
+  }
+});
+
 processBtn.addEventListener("click", processSyllabus);
 
 clearBtn.addEventListener("click", () => {
   syllabusInput.value = "";
+  fileInput.value = "";
   questionInput.value = "";
   currentContext = "";
   processedContext.textContent =
@@ -192,6 +233,7 @@ clearBtn.addEventListener("click", () => {
   askBtn.disabled = true;
   resetAnswer();
   setMessage(processMessage, "");
+  setMessage(fileMessage, "");
 });
 
 loadSampleBtn.addEventListener("click", () => {
