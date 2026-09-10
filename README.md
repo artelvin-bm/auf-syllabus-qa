@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 2 of the MobileBERT Syllabus Q&A project.
+This is Version 3 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -45,3 +45,35 @@ This version includes PDF/DOCX upload. Robust syllabus-specific topic-table reco
 - lecture/laboratory handling
 - semantic chunking for long syllabi
 - confidence/no-answer thresholds
+
+
+## Version 3 additions
+
+- Stronger syllabus-specific signatory normalization.
+- Handles both vertical signatory blocks and tab-delimited multi-column signatory rows.
+- Normalizes grading weights from the syllabus formulas.
+- Detects the `X. TOPICS AND TEACHING-LEARNING ACTIVITIES` section.
+- Preserves Lecture vs Laboratory context.
+- Converts detected topic rows into explicit statements for:
+  - topic name
+  - schedule/week
+  - allocated hours
+  - CLO association
+- Keeps the original extracted syllabus text and appends normalized context instead of replacing source facts.
+
+## Good Version 3 test questions
+
+- Who is the instructor?
+- Who prepared the syllabus?
+- Who reviewed the syllabus?
+- Who approved the syllabus?
+- What is the course code?
+- What are the prerequisites?
+- What is the weight of the Midterm Exam?
+- What lecture topic is scheduled during the 7th to 8th week?
+- How many hours are allocated to a topic?
+- Which CLO is associated with a topic?
+
+## Remaining limitations
+
+The topic parser currently works best when the extractor produces tab-delimited rows. Very complex PDF tables can still require more coordinate-based row reconstruction. Long syllabi will also need semantic chunking before the final version.

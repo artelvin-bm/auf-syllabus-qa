@@ -22,8 +22,8 @@
         <p class="eyebrow">PTF50 · Pre-Trained Model Project</p>
         <h1>Syllabus Q&A</h1>
         <p class="subtitle">
-          Paste syllabus text, preprocess it into MobileBERT-friendly context,
-          then ask questions about the syllabus.
+          Paste or upload a syllabus, reconstruct key relationships from its structure,
+          then ask questions using MobileBERT.
         </p>
       </div>
       <div id="modelBadge" class="status-badge loading">Model not loaded</div>
@@ -108,8 +108,8 @@
       <details>
         <summary>Processed context</summary>
         <p class="debug-help">
-          This is the context sent to MobileBERT. The normalizer keeps the
-          original information and adds explicit relationship sentences.
+          This is the context sent to MobileBERT. Version 3 adds explicit course-detail,
+          signatory, grading, and topic-record relationships while preserving source facts.
         </p>
         <pre id="processedContext">Process a syllabus to view the normalized context.</pre>
       </details>
