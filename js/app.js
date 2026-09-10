@@ -159,6 +159,23 @@ async function askQuestion() {
     const quality = evaluateAnswerQuality(answers);
 
     if (!answers || answers.length === 0 || quality.status === "no-answer") {
+      if (retrieval.answerHint) {
+        answerPanel.classList.remove("hidden");
+        answerText.textContent = sanitizeExtractedAnswer(
+          retrieval.answerHint,
+          question
+        );
+        confidenceText.textContent = "Resolved from syllabus structure";
+        answerCountText.textContent = "";
+        candidateList.innerHTML = "";
+        setMessage(
+          qaMessage,
+          "Answer resolved from the matching syllabus record.",
+          "success"
+        );
+        return;
+      }
+
       answerPanel.classList.remove("hidden");
       answerText.textContent = "No reliable answer found";
       confidenceText.textContent = "Score: —";
@@ -476,6 +493,18 @@ runTestsBtn.addEventListener("click", async () => {
     runTestsBtn.disabled = false;
     askBtn.disabled = false;
   }
+});
+
+const debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+if (debugMode) {
+  document.body.classList.add("debug-mode");
+}
+
+document.querySelectorAll(".sample-question").forEach((button) => {
+  button.addEventListener("click", () => {
+    questionInput.value = button.dataset.question || "";
+    questionInput.focus();
+  });
 });
 
 // Optional eager model loading.

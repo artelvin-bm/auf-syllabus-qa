@@ -118,6 +118,7 @@ function resolveSignatoryContext(question, text) {
       return {
         label: `Signatory · ${key}`,
         context: `The syllabus was ${key} ${name}.`,
+        answerHint: name,
       };
     }
   }
@@ -137,6 +138,7 @@ function resolveSignatoryContext(question, text) {
       return {
         label: `Signatory Role · ${role}`,
         context: `The ${role} is ${parsed.roles[role]}.`,
+        answerHint: parsed.roles[role],
       };
     }
   }
@@ -145,16 +147,38 @@ function resolveSignatoryContext(question, text) {
 }
 
 function parseCLOsRobust(text) {
+  const normalizedBlock = findNormalizedBlock(
+    text,
+    "Normalized Course Learning Outcomes"
+  );
+
+  if (normalizedBlock) {
+    const records = [];
+    const regex = /\bCLO\s*(\d+)\s*:\s*(.+?)(?=\n|$)/gi;
+    let match;
+
+    while ((match = regex.exec(normalizedBlock))) {
+      records.push({
+        id: `CLO${match[1]}`,
+        text: match[2].trim().replace(/\.$/, ""),
+      });
+    }
+
+    if (records.length) return records;
+  }
+
   if (typeof parseCLOs === "function") {
     const parsed = parseCLOs(text);
     if (parsed && parsed.length) return parsed;
   }
 
   const flat = String(text || "").replace(/\s+/g, " ");
-  const start = flat.search(/VIII\.\s*COURSE\s+LEARNING\s+OUTCOMES(?:\s*\(CLOs\))?/i);
-  if (start < 0) return [];
+  const sectionStart = flat.search(
+    /VIII\.\s*COURSE\s+LEARNING\s+OUTCOMES(?:\s*\(CLOs\))?/i
+  );
+  if (sectionStart < 0) return [];
 
-  const after = flat.slice(start);
+  const after = flat.slice(sectionStart);
   const endMatch = after.match(/IX\.\s*CURRICULAR\s+MAPPING/i);
   const section = endMatch ? after.slice(0, endMatch.index) : after;
 
@@ -183,6 +207,7 @@ function resolveLearningOutcomeContext(question, text) {
       return {
         label: `Course Learning Outcome · ${id}`,
         context: `${id} states: ${record.text}`,
+        answerHint: record.text,
       };
     }
   }
@@ -198,6 +223,7 @@ function resolveLearningOutcomeContext(question, text) {
       return {
         label: `Major Course Outcome · ${id}`,
         context: `${id} states: ${record.text}`,
+        answerHint: record.text,
       };
     }
   }
@@ -296,6 +322,7 @@ function resolveTopicContext(question, text) {
     return {
       label: `Topic Hours · ${record.topic}`,
       context: `The hours allocated to ${record.topic} are ${record.hours}.`,
+      answerHint: record.hours,
     };
   }
 
@@ -303,6 +330,7 @@ function resolveTopicContext(question, text) {
     return {
       label: `Topic CLO · ${record.topic}`,
       context: `The CLO associated with ${record.topic} is CLO ${record.clo}.`,
+      answerHint: `CLO ${record.clo}`,
     };
   }
 
@@ -311,6 +339,7 @@ function resolveTopicContext(question, text) {
       return {
         label: `Topic by Week · ${record.schedule}`,
         context: `The topic taught during ${record.schedule} is ${record.topic}.`,
+        answerHint: record.topic,
       };
     }
 
@@ -318,6 +347,7 @@ function resolveTopicContext(question, text) {
       return {
         label: `Topic Schedule · ${record.topic}`,
         context: `${record.topic} is taught during ${record.schedule}.`,
+        answerHint: record.schedule,
       };
     }
   }
@@ -331,6 +361,7 @@ function resolveTopicContext(question, text) {
       return {
         label: `Subtopic Parent · ${subtopic}`,
         context: `${subtopic} is covered under the topic ${record.topic}.`,
+        answerHint: record.topic,
       };
     }
   }
@@ -372,6 +403,7 @@ function buildStructuredAnswerContext(question, fullText, chunks) {
   if (resolved && resolved.context) {
     return {
       context: resolved.context,
+      answerHint: resolved.answerHint || null,
       selected: [
         {
           title: `[Structured Resolver: ${resolved.label}]`,
@@ -388,6 +420,7 @@ function buildStructuredAnswerContext(question, fullText, chunks) {
   const fallback = buildRetrievedContext(question, chunks, 3);
   return {
     ...fallback,
+    answerHint: null,
     structured: false,
   };
 }

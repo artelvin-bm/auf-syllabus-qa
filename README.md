@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.8 of the final MobileBERT Syllabus Q&A project, with answer-span cleanup for leaked section labels.
+This is the final demo build of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -357,3 +357,17 @@ MobileBERT is still used for the final answer extraction. The resolver only cons
 - Removes leaked learning-outcome/topic headers from otherwise correct spans.
 - Cleans Course Title and Course Code answers before ranking.
 - Collapses accidental duplicate outputs such as `NAME. NAME`.
+
+
+## Final demo build
+
+The default interface now shows only the presentation-ready workflow:
+
+1. Upload or paste a syllabus.
+2. Process the syllabus.
+3. Ask a question.
+4. View the best answer.
+
+Evaluation and debug panels are hidden by default. To show them, append `?debug=1` to the page URL.
+
+MobileBERT remains the primary answer extractor. If preprocessing resolves a question to one exact syllabus fact but MobileBERT returns no usable span, the application displays that exact structured fact as a final fallback.

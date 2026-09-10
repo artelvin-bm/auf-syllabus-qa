@@ -531,8 +531,8 @@ ${topicRecordsToStatements(records)}`;
 function normalizeSyllabus(text) {
   let normalized = cleanText(text);
   normalized = normalizeCourseFields(normalized);
-  normalized = normalizeNameRolePairs(normalized);
   normalized = normalizeSignatories(normalized);
+  normalized = normalizeNameRolePairs(normalized);
   normalized = normalizeLearningOutcomesAndLists(normalized);
   normalized = normalizeGradingSystem(normalized);
   normalized = normalizeTopicRecords(normalized);

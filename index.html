@@ -42,10 +42,8 @@
           </p>
 
           <div class="hero-actions">
-            <span class="hero-chip">PDF</span>
-            <span class="hero-chip">DOCX</span>
-            <span class="hero-chip">Paste Text</span>
-            <span class="hero-chip">MobileBERT</span>
+            <span class="hero-chip">PDF & DOCX</span>
+            <span class="hero-chip">MobileBERT Q&A</span>
           </div>
         </div>
       </div>
@@ -99,6 +97,12 @@
         </div>
       </div>
 
+      <div class="sample-questions" aria-label="Example questions">
+        <button type="button" class="sample-question" data-question="Who is the instructor?">Who is the instructor?</button>
+        <button type="button" class="sample-question" data-question="What is the course title?">What is the course title?</button>
+        <button type="button" class="sample-question" data-question="What is CLO 2?">What is CLO 2?</button>
+      </div>
+
       <div class="question-row">
         <input
           id="questionInput"
@@ -125,13 +129,13 @@
 
       <p id="qaMessage" class="message"></p>
 
-      <div class="quality-note">
+      <div class="quality-note debug-only">
         <strong>Answer quality:</strong>
         low-scoring or malformed spans are suppressed instead of being shown as confident answers.
       </div>
     </section>
 
-    <section class="card">
+    <section class="card debug-only">
       <div class="section-heading">
         <div>
           <span class="step-number">3</span>
@@ -163,7 +167,7 @@
       <div id="testResults" class="test-results"></div>
     </section>
 
-    <section class="card debug-card">
+    <section class="card debug-card debug-only">
       <details>
         <summary>Retrieved context for last question</summary>
         <p class="debug-help">
@@ -173,11 +177,11 @@
       </details>
     </section>
 
-    <section class="card debug-card">
+    <section class="card debug-card debug-only">
       <details>
         <summary>Processed context</summary>
         <p class="debug-help">
-          This is the context sent to MobileBERT. Final version: upload a syllabus, ask questions, and run evaluation tests against PTF50, SIP10, and PTF60.
+          This is the context sent to MobileBERT. Upload a syllabus and ask natural-language questions about its content.
         </p>
         <pre id="processedContext">Process a syllabus to view the normalized context.</pre>
       </details>

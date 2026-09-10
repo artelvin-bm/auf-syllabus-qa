@@ -236,8 +236,11 @@ async function runEvaluationTest(testCase, chunks, fallbackContext) {
       ? answers[0]
       : null;
 
-  const actual = best ? best.text : "";
-  const passed = best
+  const actual = best
+    ? best.text
+    : retrieval.answerHint || "";
+
+  const passed = actual
     ? isExpectedAnswer(actual, testCase.expected)
     : false;
 
@@ -248,7 +251,11 @@ async function runEvaluationTest(testCase, chunks, fallbackContext) {
     score: best
       ? Number(best.adjustedScore ?? best.score ?? 0)
       : null,
-    quality: quality.status,
+    quality: best
+      ? quality.status
+      : retrieval.answerHint
+      ? "structured-fallback"
+      : quality.status,
     selectedChunks: retrieval.selected.map((chunk) => chunk.title),
   };
 }

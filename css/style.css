@@ -731,3 +731,40 @@ pre {
     font-size: .72rem;
   }
 }
+
+
+/* FINAL DEMO */
+.debug-only {
+  display: none !important;
+}
+
+body.debug-mode .debug-only {
+  display: block !important;
+}
+
+.sample-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -2px 0 12px;
+}
+
+.sample-question {
+  border: 1px solid #d2ddea;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #f8fafc;
+  color: var(--auf-blue);
+  cursor: pointer;
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.sample-question:hover {
+  background: #edf3fa;
+  border-color: #b9c9dd;
+}
+
+.answer-panel {
+  box-shadow: inset 4px 0 0 rgba(10, 45, 116, .65);
+}
