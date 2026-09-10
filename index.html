@@ -109,6 +109,38 @@
       </div>
     </section>
 
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <span class="step-number">3</span>
+          <h2>Evaluation tests</h2>
+        </div>
+      </div>
+
+      <p class="evaluation-help">
+        Run representative questions from the actual PTF50, SIP10, or PTF60 syllabus.
+        The app compares MobileBERT's answer with the expected syllabus answer.
+      </p>
+
+      <div class="evaluation-controls">
+        <select id="testSetSelect">
+          <option value="">Choose a test set</option>
+          <option value="PTF50">PTF50</option>
+          <option value="SIP10">SIP10</option>
+          <option value="PTF60">PTF60</option>
+        </select>
+
+        <button id="runTestsBtn" class="button secondary" type="button" disabled>
+          Run tests
+        </button>
+      </div>
+
+      <p id="testMessage" class="message"></p>
+
+      <div id="testSummary" class="test-summary hidden"></div>
+      <div id="testResults" class="test-results"></div>
+    </section>
+
     <section class="card debug-card">
       <details>
         <summary>Retrieved context for last question</summary>
@@ -123,7 +155,7 @@
       <details>
         <summary>Processed context</summary>
         <p class="debug-help">
-          This is the context sent to MobileBERT. Version 7 also normalizes CLOs, MCOs, PLOs, institutional outcomes, and structured syllabus lists.
+          This is the context sent to MobileBERT. Final version: upload a syllabus, ask questions, and run evaluation tests against PTF50, SIP10, and PTF60.
         </p>
         <pre id="processedContext">Process a syllabus to view the normalized context.</pre>
       </details>
@@ -136,6 +168,7 @@
   <script src="js/normalizer.js"></script>
   <script src="js/chunker.js"></script>
   <script src="js/qna.js"></script>
+  <script src="js/tests.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -16,6 +16,11 @@ const answerText = document.getElementById("answerText");
 const confidenceText = document.getElementById("confidenceText");
 const answerCountText = document.getElementById("answerCountText");
 const candidateList = document.getElementById("candidateList");
+const testSetSelect = document.getElementById("testSetSelect");
+const runTestsBtn = document.getElementById("runTestsBtn");
+const testMessage = document.getElementById("testMessage");
+const testSummary = document.getElementById("testSummary");
+const testResults = document.getElementById("testResults");
 
 let currentContext = "";
 let currentChunks = [];
@@ -89,6 +94,17 @@ function processSyllabus() {
   processedContext.textContent = currentContext;
   retrievedContext.textContent = `Created ${currentChunks.length} semantic chunks. Ask a question to view the selected context.`;
   askBtn.disabled = false;
+
+  const detectedTestSet =
+    typeof detectTestSetFromText === "function"
+      ? detectTestSetFromText(raw)
+      : null;
+
+  if (detectedTestSet) {
+    testSetSelect.value = detectedTestSet;
+  }
+
+  runTestsBtn.disabled = !testSetSelect.value;
 
   const originalLength = raw.length;
   const processedLength = currentContext.length;
@@ -270,6 +286,12 @@ clearBtn.addEventListener("click", () => {
   resetAnswer();
   setMessage(processMessage, "");
   setMessage(fileMessage, "");
+  setMessage(testMessage, "");
+  testSetSelect.value = "";
+  runTestsBtn.disabled = true;
+  testSummary.classList.add("hidden");
+  testSummary.textContent = "";
+  testResults.innerHTML = "";
 });
 
 loadSampleBtn.addEventListener("click", () => {
@@ -283,6 +305,103 @@ askBtn.addEventListener("click", askQuestion);
 questionInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !askBtn.disabled) {
     askQuestion();
+  }
+});
+
+
+testSetSelect.addEventListener("change", () => {
+  runTestsBtn.disabled = !testSetSelect.value || !currentContext;
+});
+
+runTestsBtn.addEventListener("click", async () => {
+  const key = testSetSelect.value;
+
+  if (!key) {
+    setMessage(testMessage, "Choose a test set first.", "error");
+    return;
+  }
+
+  if (!currentContext || !currentChunks.length) {
+    setMessage(testMessage, "Process a syllabus before running tests.", "error");
+    return;
+  }
+
+  runTestsBtn.disabled = true;
+  askBtn.disabled = true;
+  testResults.innerHTML = "";
+  testSummary.classList.add("hidden");
+
+  try {
+    setMessage(
+      testMessage,
+      `Running ${key} evaluation tests. This may take a while because MobileBERT runs once per question.`
+    );
+
+    const results = await runTestSet(
+      key,
+      currentChunks,
+      currentContext,
+      (completed, total, testCase) => {
+        if (completed < total && testCase) {
+          setMessage(
+            testMessage,
+            `Running test ${completed + 1} of ${total}: ${testCase.question}`
+          );
+        }
+      }
+    );
+
+    const passed = results.filter((result) => result.passed).length;
+    const total = results.length;
+    const percentage = total ? Math.round((passed / total) * 100) : 0;
+
+    testSummary.classList.remove("hidden");
+    testSummary.textContent =
+      `${key}: ${passed}/${total} tests passed (${percentage}%).`;
+
+    testResults.innerHTML = results
+      .map((result) => {
+        const expected = result.expected.join(" OR ");
+        const score =
+          result.score === null ? "—" : Number(result.score).toFixed(4);
+
+        return `
+          <div class="test-result ${result.passed ? "pass" : "fail"}">
+            <div class="test-result-head">
+              <strong>${escapeHtml(result.question)}</strong>
+              <span class="test-result-status">
+                ${result.passed ? "PASS" : "FAIL"}
+              </span>
+            </div>
+
+            <p><strong>Expected:</strong> ${escapeHtml(expected)}</p>
+            <p><strong>Actual:</strong> ${escapeHtml(result.actual)}</p>
+
+            <p class="test-meta">
+              ${escapeHtml(result.category)}
+              · quality ${escapeHtml(result.quality)}
+              · score ${score}
+            </p>
+          </div>
+        `;
+      })
+      .join("");
+
+    setMessage(
+      testMessage,
+      `Evaluation complete: ${passed}/${total} passed.`,
+      passed === total ? "success" : ""
+    );
+  } catch (error) {
+    console.error(error);
+    setMessage(
+      testMessage,
+      `Could not complete evaluation: ${error.message}`,
+      "error"
+    );
+  } finally {
+    runTestsBtn.disabled = false;
+    askBtn.disabled = false;
   }
 });
 

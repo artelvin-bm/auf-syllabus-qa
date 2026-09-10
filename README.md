@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 7 of the MobileBERT Syllabus Q&A project.
+This is Version 8, the final planned version of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -202,3 +202,55 @@ Normalized:
 CLO1: Explain the modern web AI landscape, including the architectures, capabilities, trade-offs, and ethical considerations of client-side and server-side AI deployment.
 CLO1 is a Course Learning Outcome.
 The course learning outcome CLO1 states: Explain the modern web AI landscape, including the architectures, capabilities, trade-offs, and ethical considerations of client-side and server-side AI deployment.
+
+
+## Version 8 — Final planned version
+
+Version 8 adds a built-in evaluation harness for the three real syllabi used during development:
+
+- PTF50
+- SIP10
+- PTF60
+
+### Evaluation features
+
+- Automatically detects the likely syllabus test set from the loaded text.
+- Runs representative questions through:
+  - semantic retrieval
+  - MobileBERT QnA
+  - answer-quality filtering
+- Compares the returned answer with one or more accepted expected answers.
+- Displays:
+  - PASS / FAIL
+  - expected answer
+  - actual answer
+  - category
+  - answer quality
+  - adjusted score
+- Shows an overall pass percentage.
+
+### Recommended final workflow
+
+1. Run the project through Live Server.
+2. Upload one of the actual syllabus files.
+3. Wait for extraction and preprocessing.
+4. Test a few questions manually.
+5. Run the matching evaluation set.
+6. Inspect failed cases using:
+   - Processed Context
+   - Retrieved Context for Last Question
+7. Use failures to improve preprocessing rules rather than changing source facts.
+
+### Final architecture
+
+PDF / DOCX / pasted text
+→ browser-side extraction
+→ cleaning
+→ syllabus structure normalization
+→ CLO/MCO/list normalization
+→ topic-table reconstruction
+→ semantic chunking
+→ relevant-context retrieval
+→ MobileBERT extractive Q&A
+→ answer-quality filtering
+→ evaluation against real syllabus questions
