@@ -60,12 +60,35 @@
         </button>
       </div>
 
-      <div class="upload-box">
-        <input id="fileInput" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-        <div>
-          <strong>Upload PDF or DOCX</strong>
-          <p>PDF and DOCX files are processed directly in the browser. You can also paste syllabus text manually.</p>
+      <div class="upload-box modern-upload" id="uploadDropZone">
+        <div class="upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 16V4M12 4L7.5 8.5M12 4l4.5 4.5M5 15.5v2A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-2"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </div>
+
+        <div class="upload-copy">
+          <strong>Upload syllabus</strong>
+          <p>Drag and drop a PDF or DOCX file here, or browse from your device.</p>
+
+          <div class="upload-actions">
+            <label for="fileInput" class="file-picker-button">Browse files</label>
+            <span id="selectedFileName" class="selected-file-name">No file selected</span>
+          </div>
+        </div>
+
+        <input
+          id="fileInput"
+          type="file"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          class="visually-hidden-file"
+        />
       </div>
 
       <div class="or-divider"><span>OR</span></div>

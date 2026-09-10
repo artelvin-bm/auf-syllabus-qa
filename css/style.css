@@ -768,3 +768,134 @@ body.debug-mode .debug-only {
 .answer-panel {
   box-shadow: inset 4px 0 0 rgba(10, 45, 116, .65);
 }
+
+
+/* MODERN FILE UPLOAD */
+.modern-upload {
+  position: relative;
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 16px;
+  min-height: 118px;
+  padding: 20px;
+  border: 1.5px dashed #b9c7d8;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(248,251,255,.98), rgba(244,248,253,.98));
+  transition:
+    border-color .16s ease,
+    background-color .16s ease,
+    box-shadow .16s ease,
+    transform .16s ease;
+}
+
+.modern-upload:hover,
+.modern-upload.drag-over {
+  border-color: #6f8fbd;
+  background: #f7fbff;
+  box-shadow: 0 10px 24px rgba(10,45,116,.08);
+}
+
+.modern-upload.drag-over {
+  transform: translateY(-1px);
+}
+
+.upload-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: #eaf1fb;
+  color: var(--auf-blue);
+}
+
+.upload-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.upload-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-copy strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: .98rem;
+}
+
+.upload-copy p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.45;
+}
+
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-picker-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--auf-blue), var(--auf-blue-2));
+  color: #fff;
+  cursor: pointer;
+  font-size: .84rem;
+  font-weight: 900;
+  box-shadow: 0 7px 16px rgba(10,45,116,.16);
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease;
+}
+
+.file-picker-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 20px rgba(10,45,116,.2);
+}
+
+.selected-file-name {
+  max-width: min(420px, 100%);
+  overflow: hidden;
+  color: #6d7b8e;
+  font-size: .82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visually-hidden-file {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  clip-path: inset(50%) !important;
+}
+
+@media (max-width: 640px) {
+  .modern-upload {
+    align-items: flex-start;
+  }
+
+  .upload-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .selected-file-name {
+    max-width: 100%;
+  }
+}
