@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.7 of the final MobileBERT Syllabus Q&A project, with a structured context resolver before MobileBERT.
+This is Version 8.8 of the final MobileBERT Syllabus Q&A project, with answer-span cleanup for leaked section labels.
 
 ## What this version does
 
@@ -349,3 +349,11 @@ Version 8.7 therefore adds a deterministic **structured context resolver** befor
 - Hours, CLO, schedule, and parent-topic questions are converted into a single faithful sentence.
 
 MobileBERT is still used for the final answer extraction. The resolver only constructs a smaller passage from facts already present in the syllabus.
+
+
+## Version 8.8 answer cleanup
+
+- Removes stray trailing `DETAILS` / `COURSE DETAILS` from extracted answers.
+- Removes leaked learning-outcome/topic headers from otherwise correct spans.
+- Cleans Course Title and Course Code answers before ranking.
+- Collapses accidental duplicate outputs such as `NAME. NAME`.

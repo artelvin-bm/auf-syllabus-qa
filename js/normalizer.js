@@ -103,7 +103,10 @@ function extractCourseFieldValues(text) {
         .replace(/\\n+/g, " ")
         .replace(/\\s+/g, " ")
         .trim()
-        .replace(/[.;]+$/, "");
+        .replace(/\\s+(?:COURSE\\s+)?DETAILS\\s*$/i, "")
+        .replace(/\\s+(?:COURSE\\s+)?LEARNING\\s+OUTCOMES\\s*$/i, "")
+        .replace(/[.;]+$/, "")
+        .trim();
     }
   }
 

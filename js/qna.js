@@ -26,6 +26,45 @@ function normalizeAnswerText(text) {
     .trim();
 }
 
+function sanitizeExtractedAnswer(text, question = "") {
+  let cleaned = normalizeAnswerText(text);
+
+  cleaned = cleaned
+    .replace(/\s+(?:COURSE\s+)?DETAILS\.?$/i, "")
+    .replace(/\s+(?:COURSE\s+)?LEARNING\s+OUTCOMES\.?$/i, "")
+    .replace(/\s+TOPICS\s+AND\s+TEACHING-LEARNING\s+ACTIVITIES\.?$/i, "")
+    .trim();
+
+  if (/course title/i.test(question)) {
+    cleaned = cleaned
+      .replace(/^course title\s*:\s*/i, "")
+      .replace(/\s+course type.*$/i, "")
+      .trim();
+  }
+
+  if (/course code/i.test(question)) {
+    cleaned = cleaned
+      .replace(/^course code\s*:\s*/i, "")
+      .replace(/\s+v\.?\s*$/i, "")
+      .trim();
+  }
+
+  // Collapse exact duplicated answers, e.g. "NAME. NAME".
+  const parts = cleaned
+    .split(/\.\s+/)
+    .map((part) => part.replace(/\.$/, "").trim())
+    .filter(Boolean);
+
+  if (
+    parts.length === 2 &&
+    parts[0].toLowerCase() === parts[1].toLowerCase()
+  ) {
+    cleaned = parts[0];
+  }
+
+  return cleaned;
+}
+
 function answerKey(text) {
   return normalizeAnswerText(text)
     .toLowerCase()
@@ -61,12 +100,12 @@ function looksMalformedAnswer(text) {
   return false;
 }
 
-function dedupeAnswers(answers) {
+function dedupeAnswers(answers, question = "") {
   const seen = new Set();
   const output = [];
 
   for (const answer of answers || []) {
-    const cleaned = normalizeAnswerText(answer.text);
+    const cleaned = sanitizeExtractedAnswer(answer.text, question);
     const key = answerKey(cleaned);
 
     if (!key || seen.has(key)) continue;
@@ -126,7 +165,7 @@ async function findAnswers(question, passage) {
   const model = await loadMobileBert();
   const rawAnswers = await model.findAnswers(question, passage);
 
-  const cleaned = dedupeAnswers(rawAnswers);
+  const cleaned = dedupeAnswers(rawAnswers, question);
   const ranked = rerankAnswers(question, cleaned);
 
   return ranked.slice(0, MAX_CANDIDATES);
