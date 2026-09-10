@@ -79,6 +79,9 @@ function processSyllabus() {
     return;
   }
 
+  const detectedTopicRecords = typeof reconstructTopicRecords === "function"
+    ? reconstructTopicRecords(raw)
+    : [];
   currentContext = normalizeSyllabus(raw);
   currentChunks = chunkBySections(currentContext);
   processedContext.textContent = currentContext;
@@ -90,7 +93,7 @@ function processSyllabus() {
 
   setMessage(
     processMessage,
-    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context · ${currentChunks.length} semantic chunks.`,
+    `Syllabus processed. ${originalLength.toLocaleString()} original characters → ${processedLength.toLocaleString()} characters of QA context · ${currentChunks.length} semantic chunks · ${detectedTopicRecords.length} topic records detected.`,
     "success"
   );
 

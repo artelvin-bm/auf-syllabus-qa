@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 4.1 of the MobileBERT Syllabus Q&A project.
+This is Version 5 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -113,3 +113,41 @@ Instructor  | Chair       | Dean
 could incorrectly associate the last name with the first role.
 
 The parser now reconstructs names, relationships, and roles by column order and disables the adjacent-line name/role heuristic inside detected signatory blocks.
+
+
+## Version 5 additions
+
+- Added `topicParser.js`.
+- Reconstructs topic records from both:
+  - tab-delimited extracted table rows
+  - multi-line flattened PDF topic blocks
+- Detects:
+  - Lecture vs Laboratory
+  - topic title
+  - hours
+  - week/schedule
+  - CLO association
+  - lettered subtopics such as A., B., C.
+- Merges duplicate records from tab-based and block-based parsing.
+- Shows the number of detected topic records after processing.
+- Generates MobileBERT-friendly statements from reconstructed topic records.
+
+## Example target transformation
+
+Original extracted block:
+
+III. Natural Language Processing with Transformers.js
+A. Pipelines and Supported Tasks
+B. Hugging Face Models on the Web
+C. Sentiment Analysis, Summarization, and Zero-Shot Classification
+4 hours
+7th-8th week
+2
+
+Normalized:
+
+Lecture topic: Natural Language Processing with Transformers.js.
+The lecture topic Natural Language Processing with Transformers.js is scheduled during 7th to 8th week.
+The lecture topic Natural Language Processing with Transformers.js has 4 hours allocated to it.
+The lecture topic Natural Language Processing with Transformers.js is associated with CLO 2.
+The subtopics under Natural Language Processing with Transformers.js are Pipelines and Supported Tasks; Hugging Face Models on the Web; Sentiment Analysis, Summarization, and Zero-Shot Classification.

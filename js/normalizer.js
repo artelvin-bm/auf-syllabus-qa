@@ -399,38 +399,17 @@ function parseTopicTableRows(text) {
 }
 
 function normalizeTopicRecords(text) {
-  const records = parseTopicTableRows(text);
-  if (!records.length) return text;
-
-  const statements = [];
-
-  for (const record of records) {
-    const prefix = record.mode ? `${record.mode} topic` : "Topic";
-
-    statements.push(`${prefix}: ${record.topic}.`);
-
-    if (record.schedule) {
-      statements.push(
-        `The ${prefix.toLowerCase()} ${record.topic} is scheduled during ${record.schedule}.`
-      );
-    }
-
-    if (record.hours) {
-      statements.push(
-        `The ${prefix.toLowerCase()} ${record.topic} has ${record.hours} allocated to it.`
-      );
-    }
-
-    if (record.clo) {
-      statements.push(
-        `The ${prefix.toLowerCase()} ${record.topic} is associated with CLO ${record.clo}.`
-      );
-    }
-
-    statements.push("");
+  if (typeof reconstructTopicRecords !== "function") {
+    return text;
   }
 
-  return `${text}\n\n[Normalized Topic Records]\n${statements.join("\n").trim()}`;
+  const records = reconstructTopicRecords(text);
+  if (!records.length) return text;
+
+  return `${text}
+
+[Normalized Topic Records]
+${topicRecordsToStatements(records)}`;
 }
 
 function normalizeSyllabus(text) {
