@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.3 of the final MobileBERT Syllabus Q&A project, with separate AUF header branding.
+This is Version 8.4 of the final MobileBERT Syllabus Q&A project, with console-friendly evaluation output.
 
 ## What this version does
 
@@ -283,3 +283,21 @@ PDF / DOCX / pasted text
 - Moved MobileBERT loading/ready status into the top header.
 - Left the hero focused on the Syllabus Q&A project title and description.
 - Preserved the right-aligned hero copy and mobile responsiveness.
+
+
+## Version 8.4 debugging support
+
+When an evaluation test set finishes, the browser console now prints:
+
+- summary pass count and percentage
+- `console.table()` with every question
+- expected answer
+- actual MobileBERT answer
+- PASS / FAIL
+- quality level
+- score
+- selected semantic chunks
+- formatted JSON
+- a plain-text copyable report
+
+Open DevTools → Console, run the tests, then copy the report into ChatGPT for debugging.

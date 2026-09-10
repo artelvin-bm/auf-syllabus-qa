@@ -355,6 +355,70 @@ runTestsBtn.addEventListener("click", async () => {
     const total = results.length;
     const percentage = total ? Math.round((passed / total) * 100) : 0;
 
+    // Copy-friendly console output for debugging.
+    console.group(`Syllabus Q&A Evaluation — ${key}`);
+    console.log(`Summary: ${passed}/${total} passed (${percentage}%)`);
+
+    console.table(
+      results.map((result, index) => ({
+        "#": index + 1,
+        Category: result.category,
+        Question: result.question,
+        Expected: result.expected.join(" OR "),
+        Actual: result.actual,
+        Pass: result.passed ? "PASS" : "FAIL",
+        Quality: result.quality,
+        Score:
+          result.score === null
+            ? ""
+            : Number(result.score).toFixed(4),
+        Chunks: result.selectedChunks.join(" | "),
+      }))
+    );
+
+    console.log("Detailed JSON:");
+    console.log(
+      JSON.stringify(
+        {
+          syllabus: key,
+          summary: {
+            passed,
+            total,
+            percentage,
+          },
+          results,
+        },
+        null,
+        2
+      )
+    );
+
+    console.log("Copyable text report:");
+    console.log(
+      [
+        `SYLLABUS Q&A TEST REPORT — ${key}`,
+        `Summary: ${passed}/${total} passed (${percentage}%)`,
+        "",
+        ...results.flatMap((result, index) => [
+          `${index + 1}. ${result.question}`,
+          `Category: ${result.category}`,
+          `Expected: ${result.expected.join(" OR ")}`,
+          `Actual: ${result.actual}`,
+          `Result: ${result.passed ? "PASS" : "FAIL"}`,
+          `Quality: ${result.quality}`,
+          `Score: ${
+            result.score === null
+              ? "—"
+              : Number(result.score).toFixed(4)
+          }`,
+          `Selected chunks: ${result.selectedChunks.join(" | ")}`,
+          "",
+        ]),
+      ].join("\n")
+    );
+
+    console.groupEnd();
+
     testSummary.classList.remove("hidden");
     testSummary.textContent =
       `${key}: ${passed}/${total} tests passed (${percentage}%).`;
