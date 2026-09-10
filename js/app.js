@@ -147,7 +147,7 @@ async function askQuestion() {
       setModelStatus("Loading MobileBERT…", "loading");
     }
 
-    const retrieval = buildRetrievedContext(question, currentChunks, 3);
+    const retrieval = buildStructuredAnswerContext(question, currentContext, currentChunks);
     const qnaContext = retrieval.context || currentContext;
     retrievedContext.textContent = retrieval.selected
       .map((chunk, index) => `#${index + 1} ${chunk.title} · retrieval score ${chunk.retrievalScore}\n\n${chunk.focusedContent || chunk.content}`)

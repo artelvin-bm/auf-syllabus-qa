@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 8.6 of the final MobileBERT Syllabus Q&A project, with focused micro-context and parser fixes.
+This is Version 8.7 of the final MobileBERT Syllabus Q&A project, with a structured context resolver before MobileBERT.
 
 ## What this version does
 
@@ -329,3 +329,23 @@ Open DevTools → Console, run the tests, then copy the report into ChatGPT for 
 - Signatory questions prioritize the exact Prepared/Reviewed/Evaluated/Approved line.
 - Topic questions prioritize the matching topic record.
 - Direct `What is CLO 2?` questions prioritize the matching CLO record.
+
+
+## Version 8.7 debugging fixes
+
+The remaining evaluation failures showed that even correct normalized chunks can still confuse MobileBERT when several similar facts appear together.
+
+Version 8.7 therefore adds a deterministic **structured context resolver** before MobileBERT:
+
+- Course-detail questions resolve to one exact course-detail statement.
+- Prepared/Reviewed/Evaluated/Approved questions resolve to one exact signatory statement.
+- Instructor/Chair/Dean questions resolve to one exact role statement.
+- `What is CLO N?` resolves to the exact CLO record.
+- Topic questions resolve to the best matching topic record by:
+  - requested week range
+  - Lecture/Laboratory mode
+  - topic-name overlap
+  - subtopic-name overlap
+- Hours, CLO, schedule, and parent-topic questions are converted into a single faithful sentence.
+
+MobileBERT is still used for the final answer extraction. The resolver only constructs a smaller passage from facts already present in the syllabus.

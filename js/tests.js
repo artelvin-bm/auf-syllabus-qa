@@ -225,7 +225,7 @@ function detectTestSetFromText(text) {
 }
 
 async function runEvaluationTest(testCase, chunks, fallbackContext) {
-  const retrieval = buildRetrievedContext(testCase.question, chunks, 3);
+  const retrieval = buildStructuredAnswerContext(testCase.question, fallbackContext, chunks);
   const context = retrieval.context || fallbackContext;
 
   const answers = await findAnswers(testCase.question, context);
