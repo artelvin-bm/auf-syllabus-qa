@@ -365,3 +365,15 @@ pre {
     max-width: 100%;
   }
 }
+
+
+.quality-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #dce4ee;
+  border-radius: 10px;
+  background: #fafbfd;
+  color: #627186;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}

@@ -138,40 +138,59 @@ async function askQuestion() {
 
     setModelStatus("MobileBERT ready", "ready");
 
-    if (!answers || answers.length === 0) {
+    const quality = evaluateAnswerQuality(answers);
+
+    if (!answers || answers.length === 0 || quality.status === "no-answer") {
       answerPanel.classList.remove("hidden");
-      answerText.textContent = "No confident answer found";
-      confidenceText.textContent = "Confidence: —";
+      answerText.textContent = "No reliable answer found";
+      confidenceText.textContent = "Score: —";
       answerCountText.textContent = "Candidates: 0";
       candidateList.innerHTML = "";
-      setMessage(
-        qaMessage,
-        "The model did not return an answer span. Try a more specific question.",
-        "error"
-      );
+      setMessage(qaMessage, quality.message, "error");
       return;
     }
 
     const best = answers[0];
+    const displayedScore = Number(
+      best.adjustedScore ?? best.score ?? 0
+    ).toFixed(4);
+
     answerPanel.classList.remove("hidden");
-    answerText.textContent = best.text;
-    confidenceText.textContent = `Score: ${Number(best.score).toFixed(4)}`;
+
+    if (quality.status === "low-confidence") {
+      answerText.textContent = "No reliable answer found";
+    } else {
+      answerText.textContent = best.text;
+    }
+
+    confidenceText.textContent = `Adjusted score: ${displayedScore}`;
     answerCountText.textContent = `Candidates: ${answers.length}`;
 
     candidateList.innerHTML = answers
-      .slice(0, 5)
       .map(
         (answer, index) => `
           <div class="candidate">
             <strong>#${index + 1}</strong>
             ${escapeHtml(answer.text)}
-            <span> · score ${Number(answer.score).toFixed(4)}</span>
+            <span>
+              · model ${Number(answer.score).toFixed(4)}
+              · adjusted ${Number(
+                answer.adjustedScore ?? answer.score
+              ).toFixed(4)}
+            </span>
           </div>
         `
       )
       .join("");
 
-    setMessage(qaMessage, "Question answered.", "success");
+    const messageType =
+      quality.status === "high-confidence"
+        ? "success"
+        : quality.status === "medium-confidence"
+        ? ""
+        : "error";
+
+    setMessage(qaMessage, quality.message, messageType);
   } catch (error) {
     console.error(error);
     setModelStatus("Model error", "error");

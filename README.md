@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 5 of the MobileBERT Syllabus Q&A project.
+This is Version 6 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -151,3 +151,25 @@ The lecture topic Natural Language Processing with Transformers.js is scheduled 
 The lecture topic Natural Language Processing with Transformers.js has 4 hours allocated to it.
 The lecture topic Natural Language Processing with Transformers.js is associated with CLO 2.
 The subtopics under Natural Language Processing with Transformers.js are Pipelines and Supported Tasks; Hugging Face Models on the Web; Sentiment Analysis, Summarization, and Zero-Shot Classification.
+
+
+## Version 6 additions
+
+- Added answer quality controls.
+- Suppresses malformed spans such as merged signatory/role text.
+- Deduplicates repeated candidate answers.
+- Adds lightweight answer re-ranking.
+- Uses question-aware heuristics:
+  - concise name spans for "Who" questions
+  - compact values for course-detail questions
+  - numeric preference for weight/hour questions
+- Adds low/medium/high confidence handling.
+- Low-scoring answers are hidden behind "No reliable answer found" instead of being presented as correct.
+- Shows both model score and adjusted score for debugging.
+
+## Default thresholds
+
+- Minimum accepted adjusted score: 2.0
+- Strong-answer adjusted score: 5.0
+
+These values are intentionally configurable in `js/qna.js`.
