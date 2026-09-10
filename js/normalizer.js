@@ -105,25 +105,99 @@ function looksLikeName(value) {
   ) && /[A-Za-z]/.test(v);
 }
 
-function normalizeNameRolePairs(text) {
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+function detectFlattenedSignatoryBlock(lines) {
+  const relationships = ["Prepared by", "Reviewed by", "Evaluated by", "Approved by"];
 
+  for (let i = 0; i < lines.length; i++) {
+    const headerLine = lines[i].trim();
+
+    // Accept either tab-separated headings or a flattened single line containing several headings.
+    const matchedRelations = relationships.filter((rel) =>
+      new RegExp(rel, "i").test(headerLine)
+    );
+
+    if (matchedRelations.length < 2) continue;
+
+    const names = [];
+    const roles = [];
+
+    for (let j = i + 1; j < Math.min(lines.length, i + 12); j++) {
+      const candidate = lines[j].trim();
+      if (!candidate) continue;
+
+      if (looksLikeName(candidate)) {
+        names.push(candidate);
+        continue;
+      }
+
+      const role = ROLE_PATTERNS.find(
+        (r) => candidate.toLowerCase() === r.toLowerCase()
+      );
+
+      if (role) {
+        roles.push(role);
+      }
+
+      // Once we have enough names and roles, stop scanning.
+      if (
+        names.length >= matchedRelations.length &&
+        roles.length >= matchedRelations.length
+      ) {
+        break;
+      }
+    }
+
+    if (names.length >= matchedRelations.length) {
+      return {
+        startIndex: i,
+        endIndex: i + 12,
+        relationships: matchedRelations,
+        names: names.slice(0, matchedRelations.length),
+        roles: roles.slice(0, matchedRelations.length),
+      };
+    }
+  }
+
+  return null;
+}
+
+function normalizeNameRolePairs(text) {
+  const lines = text.split("\n");
+  const trimmedLines = lines.map((line) => line.trim());
   const added = [];
 
-  for (let i = 1; i < lines.length; i++) {
+  const signatoryBlock = detectFlattenedSignatoryBlock(trimmedLines);
+
+  for (let i = 1; i < trimmedLines.length; i++) {
+    // Do not use the risky adjacent-line heuristic inside the signatory block.
+    if (
+      signatoryBlock &&
+      i >= signatoryBlock.startIndex &&
+      i <= signatoryBlock.endIndex
+    ) {
+      continue;
+    }
+
     const role = ROLE_PATTERNS.find(
-      (candidate) => lines[i].toLowerCase() === candidate.toLowerCase()
+      (candidate) => trimmedLines[i].toLowerCase() === candidate.toLowerCase()
     );
 
     if (!role) continue;
 
-    const possibleName = lines[i - 1];
+    const possibleName = trimmedLines[i - 1];
     if (!looksLikeName(possibleName)) continue;
 
     added.push(`${possibleName} is the ${role.toLowerCase()}.`);
+  }
+
+  // If we detected the flattened signatory block, pair names and roles by column order.
+  if (signatoryBlock) {
+    signatoryBlock.names.forEach((name, index) => {
+      const role = signatoryBlock.roles[index];
+      if (role) {
+        added.push(`${name} is the ${role.toLowerCase()}.`);
+      }
+    });
   }
 
   if (!added.length) return text;
@@ -135,47 +209,30 @@ function normalizeNameRolePairs(text) {
 
 function normalizeSignatories(text) {
   const added = [];
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const rawLines = text.split("\n");
+  const lines = rawLines.map((line) => line.trim());
 
-  // Pattern A: vertical blocks.
-  for (let i = 0; i < lines.length; i++) {
-    const relation = RELATIONSHIP_LABELS.find((label) =>
-      new RegExp(`^${label}:?$`, "i").test(lines[i])
-    );
-    if (!relation) continue;
+  // Pattern A: flattened multi-column signatory block.
+  const flattened = detectFlattenedSignatoryBlock(lines);
 
-    for (let j = i + 1; j < Math.min(lines.length, i + 8); j++) {
-      const candidate = lines[j];
-
-      if (
-        RELATIONSHIP_LABELS.some((label) =>
-          new RegExp(`^${label}:?$`, "i").test(candidate)
-        )
-      ) {
-        continue;
+  if (flattened) {
+    flattened.relationships.forEach((relation, index) => {
+      const name = flattened.names[index];
+      if (name) {
+        added.push(`The syllabus was ${relation.toLowerCase()} ${name}.`);
       }
-
-      if (looksLikeName(candidate)) {
-        added.push(`The syllabus was ${relation.toLowerCase()} ${candidate}.`);
-        break;
-      }
-    }
+    });
   }
 
-  // Pattern B: tab-delimited multi-column rows produced by PDF/DOCX extraction.
-  const tabLines = text
-    .split("\n")
-    .map((line) => line.split("\t").map((cell) => cell.trim()).filter(Boolean))
+  // Pattern B: tab-delimited rows produced by PDF/DOCX extraction.
+  const tabLines = rawLines
+    .map((line) => line.split("	").map((cell) => cell.trim()).filter(Boolean))
     .filter((cells) => cells.length >= 2);
 
   for (let i = 0; i < tabLines.length; i++) {
-    const header = tabLines[i];
-    const normalizedHeader = header.map((cell) => cell.replace(/:$/, ""));
+    const header = tabLines[i].map((cell) => cell.replace(/:$/, ""));
 
-    const relationIndexes = normalizedHeader
+    const relationIndexes = header
       .map((cell, idx) => {
         const found = RELATIONSHIP_LABELS.find(
           (label) => cell.toLowerCase() === label.toLowerCase()
@@ -186,12 +243,39 @@ function normalizeSignatories(text) {
 
     if (!relationIndexes.length) continue;
 
-    const nextRows = tabLines.slice(i + 1, i + 4);
+    const nextRows = tabLines.slice(i + 1, i + 5);
 
     for (const { idx, relation } of relationIndexes) {
       for (const row of nextRows) {
         const candidate = row[idx];
         if (candidate && looksLikeName(candidate)) {
+          added.push(`The syllabus was ${relation.toLowerCase()} ${candidate}.`);
+          break;
+        }
+      }
+    }
+  }
+
+  // Pattern C: simple vertical blocks, but only when not already handled as flattened.
+  if (!flattened) {
+    for (let i = 0; i < lines.length; i++) {
+      const relation = RELATIONSHIP_LABELS.find((label) =>
+        new RegExp(`^${label}:?$`, "i").test(lines[i])
+      );
+      if (!relation) continue;
+
+      for (let j = i + 1; j < Math.min(lines.length, i + 8); j++) {
+        const candidate = lines[j];
+
+        if (
+          RELATIONSHIP_LABELS.some((label) =>
+            new RegExp(`^${label}:?$`, "i").test(candidate)
+          )
+        ) {
+          continue;
+        }
+
+        if (looksLikeName(candidate)) {
           added.push(`The syllabus was ${relation.toLowerCase()} ${candidate}.`);
           break;
         }

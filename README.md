@@ -1,6 +1,6 @@
 # Syllabus Q&A MVP
 
-This is Version 4 of the MobileBERT Syllabus Q&A project.
+This is Version 4.1 of the MobileBERT Syllabus Q&A project.
 
 ## What this version does
 
@@ -100,3 +100,16 @@ The topic parser currently works best when the extractor produces tab-delimited 
 MobileBERT extractive QnA works better when the answer is inside a focused context instead of a long full syllabus. Version 4 separates document understanding from answer extraction:
 
 Question → relevant chunk retrieval → MobileBERT answer extraction
+
+
+## Version 4.1 bug fix
+
+Fixed a signatory parsing bug where a flattened multi-column block such as:
+
+Prepared by | Reviewed by | Approved by
+James       | Melissa     | Lilibeth
+Instructor  | Chair       | Dean
+
+could incorrectly associate the last name with the first role.
+
+The parser now reconstructs names, relationships, and roles by column order and disables the adjacent-line name/role heuristic inside detected signatory blocks.
